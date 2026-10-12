@@ -8,6 +8,11 @@ type Props = {
   }>
 }
 
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null
+  return value ?? null
+}
+
 export default async function BookingConfirmation({
   searchParams,
 }: Props) {
@@ -62,7 +67,7 @@ export default async function BookingConfirmation({
     redirect("/user/bookings")
   }
 
-  const listing = booking.listings
+  const listing = one(booking.listings)
 
   const listingType = listing?.listing_type
 
