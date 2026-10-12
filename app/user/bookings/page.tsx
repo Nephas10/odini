@@ -2,6 +2,11 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null
+  return value ?? null
+}
+
 export default async function MyBookingsPage() {
   const supabase = await createClient()
 
@@ -85,7 +90,7 @@ export default async function MyBookingsPage() {
           <div className="mt-8 space-y-6">
 
             {bookings.map((booking) => {
-              const listing = booking.listings
+              const listing = one(booking.listings)
 
               const listingType =
                 listing?.listing_type

@@ -2,6 +2,13 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null
+  return value ?? null
+}
+
+
 export default async function DashboardPage() {
   const supabase = await createClient()
 
@@ -214,8 +221,7 @@ export default async function DashboardPage() {
 
               {recentBookings.map((booking) => {
 
-                const listing =
-                  booking.listings
+                const listing = one(booking.listings)
 
                 const type =
                   listing?.listing_type
