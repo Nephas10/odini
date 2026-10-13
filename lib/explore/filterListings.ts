@@ -1,4 +1,5 @@
 import { matchesDestination } from "./locations.ts"
+import { getEventDayBounds, matchesEventDay, type EventSchedule } from "./eventDates.ts"
 
 export type FilterableListing = {
   listing_type: string
@@ -6,6 +7,7 @@ export type FilterableListing = {
   description: string | null
   price: number | null
   location: string | null
+  eventSchedule?: EventSchedule | null
 }
 
 export type ExploreFilters = {
@@ -14,16 +16,18 @@ export type ExploreFilters = {
   location: string
   minPrice: string
   maxPrice: string
+  date?: string
 }
 
 // Preserve the existing client predicates, including Number conversion and null prices.
 export function filterListings<T extends FilterableListing>(
   listings: readonly T[],
-  { category, search, location, minPrice, maxPrice }: ExploreFilters
+  { category, search, location, minPrice, maxPrice, date = "" }: ExploreFilters
 ): T[] {
   const min = minPrice === "" ? null : Number(minPrice)
   const max = maxPrice === "" ? null : Number(maxPrice)
   const hasPriceFilter = min !== null || max !== null
+  const dayBounds = date === "" ? null : getEventDayBounds(date)
 
   return listings.filter((listing) => {
     const matchesCategory = category === "all" || listing.listing_type === category
@@ -42,6 +46,9 @@ export function filterListings<T extends FilterableListing>(
         (min === null || listing.price >= min) &&
         (max === null || listing.price <= max))
 
-    return matchesCategory && matchesLocation && matchesSearch && matchesPrice
+    const matchesDate = date === "" || listing.listing_type !== "event" ||
+      matchesEventDay(listing.eventSchedule, dayBounds)
+
+    return matchesCategory && matchesLocation && matchesSearch && matchesPrice && matchesDate
   })
 }

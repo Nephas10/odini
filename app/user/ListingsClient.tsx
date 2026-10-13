@@ -5,6 +5,7 @@ import { MapPin, Search, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 import { filterListings } from "@/lib/explore/filterListings"
 import { getDestinationOptions } from "@/lib/explore/locations"
+import type { EventSchedule } from "@/lib/explore/eventDates"
 
 type Listing = {
   id: string
@@ -16,6 +17,7 @@ type Listing = {
   image_url: string | null
   is_active: boolean
   created_at: string
+  eventSchedule?: EventSchedule | null
 }
 
 type Props = {
@@ -45,6 +47,7 @@ export default function ListingsClient({ listings }: Props) {
   const [location, setLocation] = useState("all")
   const [minPrice, setMinPrice] = useState("")
   const [maxPrice, setMaxPrice] = useState("")
+  const [date, setDate] = useState("")
 
   // Offer confidently mapped cities/destinations; cards retain the full location.
   const locations = useMemo(
@@ -58,11 +61,11 @@ export default function ListingsClient({ listings }: Props) {
   const priceRangeInvalid = min !== null && max !== null && min > max
 
   const filteredListings = filterListings(listings, {
-    category, search, location, minPrice, maxPrice,
+    category, search, location, minPrice, maxPrice, date,
   })
 
   const hasAnyFilter =
-    category !== "all" || location !== "all" || search !== "" || hasPriceFilter
+    category !== "all" || location !== "all" || search !== "" || hasPriceFilter || date !== ""
 
   function clearFilters() {
     setSearch("")
@@ -70,6 +73,7 @@ export default function ListingsClient({ listings }: Props) {
     setLocation("all")
     setMinPrice("")
     setMaxPrice("")
+    setDate("")
   }
 
   return (
@@ -112,6 +116,23 @@ export default function ListingsClient({ listings }: Props) {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Prototype's specific-date control; date applies only to Events. */}
+        <div className="mt-4">
+          <label htmlFor="explore-date" className="text-sm font-medium text-gray-700">When</label>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <input id="explore-date" type="date" value={date}
+              onChange={(e) => setDate(e.target.value)}
+              aria-describedby="explore-date-help" className={`${inputClass} sm:w-52`} />
+            {date && (
+              <button type="button" onClick={() => setDate("")}
+                className="text-sm font-medium text-[#7A1F2B] hover:underline">Clear date</button>
+            )}
+          </div>
+          <p id="explore-date-help" className="mt-2 text-xs text-gray-500">
+            Events only, in Zambia time. Stays and activities are unaffected.
+          </p>
         </div>
 
         {/* Price range */}
@@ -203,7 +224,7 @@ export default function ListingsClient({ listings }: Props) {
           <div className="rounded-2xl border border-dashed border-[#7A1F2B]/30 bg-white p-12 text-center">
             <h3 className="text-lg font-semibold text-gray-800">No listings found</h3>
             <p className="mt-2 text-sm text-gray-500">
-              Try changing your search, category, location or price range.
+              Try changing your search, category, location, date or price range.
             </p>
             <button
               onClick={clearFilters}

@@ -2,6 +2,7 @@ import { test } from "node:test"
 import { strict as assert } from "node:assert"
 import { filterListings, type ExploreFilters } from "../../lib/explore/filterListings.ts"
 import { getDestination, getDestinationOptions, SUPPORTED_DESTINATIONS } from "../../lib/explore/locations.ts"
+import { getEventDayBounds, matchesEventDay, normalizeEventSchedule } from "../../lib/explore/eventDates.ts"
 
 // Entirely synthetic records. No application pages, services or fixtures are imported.
 const listings = Object.freeze([
@@ -310,4 +311,168 @@ test("All locations and original-text search retain conflicting geography withou
   assert.equal(filterListings(geographicListings, { ...defaults, search: "zimbabwe" })[0], geographicListings[6])
   getDestinationOptions(geographicListings)
   assert.equal(geographicListings[6].location, "Roma, Lusaka, Zimbabwe")
+})
+
+test("Lusaka calendar day has explicit UTC boundaries independent of browser timezone", () => {
+  const bounds = getEventDayBounds("2026-10-13")!
+  assert.equal(new Date(bounds.start).toISOString(), "2026-10-12T22:00:00.000Z")
+  assert.equal(new Date(bounds.end).toISOString(), "2026-10-13T22:00:00.000Z")
+})
+
+test("leap day and year boundaries produce the next local midnight", () => {
+  const leap = getEventDayBounds("2024-02-29")!
+  assert.equal(new Date(leap.start).toISOString(), "2024-02-28T22:00:00.000Z")
+  assert.equal(new Date(leap.end).toISOString(), "2024-02-29T22:00:00.000Z")
+  assert.equal(new Date(getEventDayBounds("2026-12-31")!.end).toISOString(), "2026-12-31T22:00:00.000Z")
+})
+
+for (const date of ["2026-02-29", "2024-02-30", "2026-13-01", "2026-00-01", "2026-10-00", "2026-10-32", "0000-01-01", "2026-1-1", "bad", " 2026-10-13 "]) {
+  test(`rejects invalid selected calendar date ${date}`, () => {
+    assert.equal(getEventDayBounds(date), null)
+  })
+}
+
+for (const [name, start, end, expected] of [
+  ["before Lusaka midnight", "2026-10-12T21:59:59Z", null, false],
+  ["at Lusaka midnight", "2026-10-12T22:00:00Z", null, true],
+  ["last millisecond of day", "2026-10-13T21:59:59.999Z", null, true],
+  ["next midnight", "2026-10-13T22:00:00Z", null, false],
+  ["explicit local offset", "2026-10-13T00:00:00+02:00", null, true],
+  ["negative offset crosses local day", "2026-10-12T20:00:00-03:00", null, true],
+  ["multi-day overlap", "2026-10-10T10:00:00Z", "2026-10-15T10:00:00Z", true],
+  ["overnight overlap", "2026-10-12T21:00:00Z", "2026-10-12T23:00:00Z", true],
+  ["exclusive end at day start", "2026-10-12T10:00:00Z", "2026-10-12T22:00:00Z", false],
+  ["end one microsecond after day start", "2026-10-12T10:00:00Z", "2026-10-12T22:00:00.000001Z", true],
+  ["start one microsecond before next midnight", "2026-10-13T21:59:59.999999Z", null, true],
+  ["end at next midnight", "2026-10-13T10:00:00Z", "2026-10-13T22:00:00Z", true],
+  ["equal start and end", "2026-10-13T10:00:00Z", "2026-10-13T10:00:00Z", true],
+  ["equal endpoints outside day", "2026-10-12T10:00:00Z", "2026-10-12T10:00:00Z", false],
+  ["end before start", "2026-10-13T10:00:00Z", "2026-10-13T09:00:00Z", false],
+  ["invalid end", "2026-10-13T10:00:00Z", "bad", false],
+  ["empty explicit end", "2026-10-13T10:00:00Z", "", false],
+  ["numeric end", "2026-10-13T10:00:00Z", 0, false],
+  ["missing start", null, null, false],
+  ["malformed start", "bad", null, false],
+  ["timezone-free start", "2026-10-13T10:00:00", null, false],
+  ["rolled calendar start", "2026-02-30T10:00:00Z", null, false],
+  ["rolled calendar end", "2026-10-13T10:00:00Z", "2026-11-31T10:00:00Z", false],
+  ["invalid hour", "2026-10-13T24:00:00Z", null, false],
+  ["invalid offset", "2026-10-13T10:00:00+02:60", null, false],
+  ["microsecond database timestamp", "2026-10-13T10:00:00.123456+00:00", null, true],
+] as const) {
+  test(`event day matching: ${name}`, () => {
+    assert.equal(matchesEventDay({ event_time: start, end_time: end }, getEventDayBounds("2026-10-13")), expected)
+  })
+}
+
+test("valid leap-day event matches but an impossible leap-day start does not", () => {
+  assert.equal(matchesEventDay({ event_time: "2024-02-29T00:00:00+02:00", end_time: null }, getEventDayBounds("2024-02-29")), true)
+  assert.equal(matchesEventDay({ event_time: "2026-02-29T00:00:00+02:00", end_time: null }, getEventDayBounds("2026-03-01")), false)
+})
+
+test("to-one schedule adapter preserves fields without guessing array cardinality", () => {
+  const raw = Object.freeze({ event_time: "2026-10-13T10:00:00Z", end_time: null })
+  assert.deepEqual(normalizeEventSchedule(raw), { event_time: "2026-10-13T10:00:00Z", end_time: null })
+  for (const value of [null, undefined, [], [raw], [raw, raw], "bad", 12]) {
+    assert.equal(normalizeEventSchedule(value), null)
+  }
+  assert.equal(matchesEventDay(normalizeEventSchedule({}), getEventDayBounds("2026-10-13")), false)
+  assert.equal(matchesEventDay(normalizeEventSchedule({ event_time: raw.event_time, end_time: {} }), getEventDayBounds("2026-10-13")), false)
+})
+
+const datedListings = Object.freeze([
+  Object.freeze({ id: "stay-no-date", listing_type: "stay", title: "Garden Stay", description: null, location: "Roma, Lusaka", price: 100 }),
+  Object.freeze({ id: "event-match", listing_type: "event", title: "Garden Music", description: null, location: "Kabulonga, Lusaka, Zambia", price: 100, available_slots: 0, capacity: 0, eventSchedule: Object.freeze({ event_time: "2026-10-13T10:00:00Z", end_time: null }) }),
+  Object.freeze({ id: "activity-no-date", listing_type: "activity", title: "Garden Walk", description: null, location: "Woodlands, Lusaka", price: 100 }),
+  Object.freeze({ id: "event-other-day", listing_type: "event", title: "Garden Music", description: null, location: "Lusaka", price: 100, eventSchedule: Object.freeze({ event_time: "2026-10-14T10:00:00Z", end_time: null }) }),
+  Object.freeze({ id: "event-undated", listing_type: "event", title: "Garden Music", description: null, location: "Lusaka", price: 100 }),
+  Object.freeze({ id: "event-wrong-city", listing_type: "event", title: "Garden Music", description: null, location: "Kitwe", price: 100, eventSchedule: Object.freeze({ event_time: "2026-10-13T10:00:00Z", end_time: null }) }),
+  Object.freeze({ id: "event-wrong-price", listing_type: "event", title: "Garden Music", description: null, location: "Lusaka", price: 101, eventSchedule: Object.freeze({ event_time: "2026-10-13T10:00:00Z", end_time: null }) }),
+  Object.freeze({ id: "event-wrong-search", listing_type: "event", title: "Concert", description: null, location: "Lusaka", price: 100, eventSchedule: Object.freeze({ event_time: "2026-10-13T10:00:00Z", end_time: null }) }),
+])
+
+test("date filters only Events and preserves mixed-category ordering and identities", () => {
+  const result = filterListings(datedListings, { ...defaults, date: "2026-10-13" })
+  assert.deepEqual(result.map((listing) => listing.id), ["stay-no-date", "event-match", "activity-no-date", "event-wrong-city", "event-wrong-price", "event-wrong-search"])
+  assert.equal(result[1], datedListings[1])
+  assert.equal(result[1].location, "Kabulonga, Lusaka, Zambia")
+  assert.deepEqual(result[1].eventSchedule, { event_time: "2026-10-13T10:00:00Z", end_time: null })
+})
+
+for (const [category, expected] of [
+  ["stay", ["stay-no-date"]], ["activity", ["activity-no-date"]],
+  ["event", ["event-match", "event-wrong-city", "event-wrong-price", "event-wrong-search"]],
+] as const) {
+  test(`active date preserves ${category} category semantics`, () => {
+    assert.deepEqual(filterListings(datedListings, { ...defaults, category, date: "2026-10-13" }).map((listing) => listing.id), expected)
+  })
+}
+
+test("date combines independently with category, text, city and inclusive budget", () => {
+  const filters = { ...defaults, date: "2026-10-13", category: "event", search: " GARDEN ", location: " lusaka ", minPrice: "100", maxPrice: "100" }
+  assert.deepEqual(filterListings(datedListings, filters).map((listing) => listing.id), ["event-match"])
+  assert.deepEqual(filterListings(datedListings, { ...filters, date: "" }).map((listing) => listing.id), ["event-match", "event-other-day", "event-undated"])
+})
+
+test("invalid selected day excludes Events while retaining non-Events", () => {
+  assert.deepEqual(filterListings(datedListings, { ...defaults, date: "2026-02-30" }).map((listing) => listing.id), ["stay-no-date", "activity-no-date"])
+})
+
+test("restoring default state including date restores all results, not UI button coverage", () => {
+  const changed = { ...defaults, category: "event", search: "garden", location: "Lusaka", minPrice: "100", maxPrice: "100", date: "2026-10-13" }
+  assert.deepEqual(filterListings(datedListings, changed).map((listing) => listing.id), ["event-match"])
+  const reset = { ...changed, ...defaults, date: "" }
+  assert.deepEqual(filterListings(datedListings, reset).map((listing) => listing.id), ["stay-no-date", "event-match", "activity-no-date", "event-other-day", "event-undated", "event-wrong-city", "event-wrong-price", "event-wrong-search"])
+})
+
+test("missing and malformed schedules stay visible without an active date", () => {
+  const records = [
+    { ...datedListings[1], id: "null-relation", eventSchedule: null },
+    { ...datedListings[1], id: "invalid-start", eventSchedule: { event_time: "bad", end_time: null } },
+    { ...datedListings[1], id: "invalid-end", eventSchedule: { event_time: "2026-10-13T10:00:00Z", end_time: "bad" } },
+    { ...datedListings[1], id: "free-valid", price: 0 },
+    { ...datedListings[1], id: "null-price-valid", price: null },
+  ]
+  assert.deepEqual(filterListings(records, defaults).map((listing) => listing.id), ["null-relation", "invalid-start", "invalid-end", "free-valid", "null-price-valid"])
+  assert.deepEqual(filterListings(records, { ...defaults, date: "2026-10-13" }).map((listing) => listing.id), ["free-valid", "null-price-valid"])
+  assert.deepEqual(filterListings(records, { ...defaults, date: "2026-10-13", minPrice: "0", maxPrice: "0" }).map((listing) => listing.id), ["free-valid"])
+})
+
+// Independent precision regressions: every expected result is explicit.
+for (const year of ["2026", "2256", "9999"]) {
+  for (const [name, start, end, expected] of [
+    ["one microsecond before midnight", `${year}-10-12T21:59:59.999999Z`, null, false],
+    ["exactly midnight", `${year}-10-12T22:00:00.000000Z`, null, true],
+    ["one microsecond after midnight", `${year}-10-12T22:00:00.000001Z`, null, true],
+    ["exclusive end exactly midnight", `${year}-10-12T20:00:00Z`, `${year}-10-12T22:00:00.000000Z`, false],
+    ["exclusive end one microsecond before midnight", `${year}-10-12T20:00:00Z`, `${year}-10-12T21:59:59.999999Z`, false],
+    ["exclusive end one microsecond after midnight", `${year}-10-12T20:00:00Z`, `${year}-10-12T22:00:00.000001Z`, true],
+    ["equal endpoints before midnight", `${year}-10-12T21:59:59.999999Z`, `${year}-10-12T21:59:59.999999Z`, false],
+    ["equal endpoints at midnight", `${year}-10-12T22:00:00.000000Z`, `${year}-10-12T22:00:00.000000Z`, true],
+    ["reversed one-microsecond interval", `${year}-10-12T22:00:00.000002Z`, `${year}-10-12T22:00:00.000001Z`, false],
+    ["positive offset before midnight", `${year}-10-12T23:59:59.999999+02:00`, null, false],
+    ["negative offset before midnight", `${year}-10-12T18:59:59.999999-03:00`, null, false],
+    ["negative offset at midnight", `${year}-10-12T19:00:00.000000-03:00`, null, true],
+    ["missing end at midnight", `${year}-10-12T22:00:00Z`, undefined, true],
+    ["missing end before midnight", `${year}-10-12T21:59:59.999999Z`, undefined, false],
+  ] as const) {
+    test(`exact precision ${year}: ${name}`, () => {
+      assert.equal(matchesEventDay({ event_time: start, end_time: end }, getEventDayBounds(`${year}-10-13`)), expected)
+    })
+  }
+}
+
+test("exact microseconds on distant leap day preserve the exclusive next midnight", () => {
+  const bounds = getEventDayBounds("2400-02-29")
+  assert.equal(matchesEventDay({ event_time: "2400-02-28T23:59:59.999999+02:00", end_time: null }, bounds), false)
+  assert.equal(matchesEventDay({ event_time: "2400-02-29T00:00:00+02:00", end_time: null }, bounds), true)
+  assert.equal(matchesEventDay({ event_time: "2400-02-29T23:59:59.999999+02:00", end_time: null }, bounds), true)
+  assert.equal(matchesEventDay({ event_time: "2400-03-01T00:00:00+02:00", end_time: null }, bounds), false)
+})
+
+test("pre-epoch fractions retain exact ordering when epoch milliseconds are negative", () => {
+  const bounds = getEventDayBounds("1969-10-13")
+  assert.equal(matchesEventDay({ event_time: "1969-10-12T21:59:59.999999Z", end_time: null }, bounds), false)
+  assert.equal(matchesEventDay({ event_time: "1969-10-12T22:00:00.000001Z", end_time: null }, bounds), true)
+  assert.equal(matchesEventDay({ event_time: "1969-10-12T22:00:00.000002Z", end_time: "1969-10-12T22:00:00.000001Z" }, bounds), false)
 })

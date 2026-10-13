@@ -25,7 +25,11 @@ export async function getListings() {
       location,
       image_url, 
       is_active,
-      created_at
+      created_at,
+      events (
+        event_time,
+        end_time
+      )
     `)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
