@@ -1,3 +1,5 @@
+import { matchesDestination } from "./locations.ts"
+
 export type FilterableListing = {
   listing_type: string
   title: string
@@ -25,7 +27,7 @@ export function filterListings<T extends FilterableListing>(
 
   return listings.filter((listing) => {
     const matchesCategory = category === "all" || listing.listing_type === category
-    const matchesLocation = location === "all" || listing.location?.trim() === location
+    const matchesLocation = location === "all" || matchesDestination(listing.location, location)
 
     const searchText = search.trim().toLowerCase()
     const matchesSearch =

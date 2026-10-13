@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MapPin, Search, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 import { filterListings } from "@/lib/explore/filterListings"
+import { getDestinationOptions } from "@/lib/explore/locations"
 
 type Listing = {
   id: string
@@ -45,13 +46,9 @@ export default function ListingsClient({ listings }: Props) {
   const [minPrice, setMinPrice] = useState("")
   const [maxPrice, setMaxPrice] = useState("")
 
-  // Build the location list from the listings themselves,
-  // so it always matches what hosts actually entered
+  // Offer confidently mapped cities/destinations; cards retain the full location.
   const locations = useMemo(
-    () =>
-      Array.from(
-        new Set(listings.map((l) => l.location?.trim()).filter((l): l is string => !!l))
-      ).sort(),
+    () => getDestinationOptions(listings),
     [listings]
   )
 
