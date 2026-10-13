@@ -27,7 +27,12 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
 
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" })
-  const [error, setError] = useState("")
+  // Set when an email link (e.g. password reset) was expired or already used
+  const [error, setError] = useState(
+    searchParams.get("error") === "link"
+      ? "That link has expired or was already used. Please request a new one."
+      : ""
+  )
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -113,9 +118,17 @@ function LoginForm() {
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
-                  Password
-                </label>
+                <div className="mb-2 flex items-center justify-between">
+                  <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs font-medium text-[#7A1F2B] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock
                     size={18}
