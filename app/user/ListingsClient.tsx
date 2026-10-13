@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { MapPin, Search, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
+import { filterListings } from "@/lib/explore/filterListings"
 
 type Listing = {
   id: string
@@ -59,26 +60,8 @@ export default function ListingsClient({ listings }: Props) {
   const hasPriceFilter = min !== null || max !== null
   const priceRangeInvalid = min !== null && max !== null && min > max
 
-  const filteredListings = listings.filter((listing) => {
-    const matchesCategory = category === "all" || listing.listing_type === category
-
-    const matchesLocation = location === "all" || listing.location?.trim() === location
-
-    const searchText = search.trim().toLowerCase()
-    const matchesSearch =
-      !searchText ||
-      listing.title.toLowerCase().includes(searchText) ||
-      listing.description?.toLowerCase().includes(searchText) ||
-      listing.location?.toLowerCase().includes(searchText)
-
-    // With a price filter on, listings without a price are hidden
-    const matchesPrice =
-      !hasPriceFilter ||
-      (listing.price !== null &&
-        (min === null || listing.price >= min) &&
-        (max === null || listing.price <= max))
-
-    return matchesCategory && matchesLocation && matchesSearch && matchesPrice
+  const filteredListings = filterListings(listings, {
+    category, search, location, minPrice, maxPrice,
   })
 
   const hasAnyFilter =

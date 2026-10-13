@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:explore": "node --test --test-isolation=none tests/explore/filterListings.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
