@@ -38,7 +38,7 @@ const PRICE_UNIT: Record<string, string> = {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-white/40 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/60 focus:border-[#e8365d] focus:bg-[#1a1a1a] focus:ring-2 focus:ring-[#e8365d] [color-scheme:dark]"
+  "w-full min-w-0 border border-white/40 bg-white/5 px-4 text-sm text-white outline-none transition placeholder:text-white/60 focus:border-[#e8365d] focus:bg-[#1a1a1a] focus:ring-2 focus:ring-[#e8365d] [color-scheme:dark]"
 
 const focusClass =
   "focus-visible:ring-2 focus-visible:ring-[#e8365d] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f0f0f]"
@@ -82,17 +82,17 @@ export default function ListingsClient({ listings }: Props) {
   return (
     <>
       {/* Search & filters */}
-      <section className="rounded-2xl border border-white/15 bg-[#0f0f0f] p-4 sm:p-5">
-        <div className="mb-3">
+      <section className="grid grid-cols-1 gap-3 rounded-2xl border border-white/15 bg-[#0f0f0f] p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+        <div className="sm:col-span-2 xl:col-span-3">
           <h2 className="text-lg font-semibold text-white">What are you looking for?</h2>
           <p className="mt-1 text-sm text-white/70">
             Search by name, description or location.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="contents">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative min-w-0 sm:col-span-2 xl:col-span-3">
             <Search
               size={20}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-[#e8365d]"
@@ -103,7 +103,7 @@ export default function ListingsClient({ listings }: Props) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search stays, events, activities..."
-              className={`${inputClass} pl-12`}
+              className={`${inputClass} rounded-2xl py-3 pl-12`}
             />
           </div>
 
@@ -112,7 +112,7 @@ export default function ListingsClient({ listings }: Props) {
             aria-label="Select location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className={`${inputClass} sm:w-52`}
+            className={`${inputClass} self-start rounded-full py-2.5 sm:mt-7`}
           >
             <option value="all" className="bg-[#0f0f0f] text-white">All locations</option>
             {locations.map((loc) => (
@@ -124,12 +124,12 @@ export default function ListingsClient({ listings }: Props) {
         </div>
 
         {/* Prototype's specific-date control; date applies only to Events. */}
-        <div className="mt-3">
-          <label htmlFor="explore-date" className="text-sm font-medium text-white/80">When</label>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="min-w-0">
+          <label htmlFor="explore-date" className="block text-sm font-medium text-white/80">When</label>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <input id="explore-date" type="date" value={date}
               onChange={(e) => setDate(e.target.value)}
-              aria-describedby="explore-date-help" className={`${inputClass} sm:w-52`} />
+              aria-describedby="explore-date-help" className={`${inputClass} rounded-full py-2.5 sm:w-52`} />
             {date && (
               <button type="button" onClick={() => setDate("")}
                 className={`text-sm font-medium text-[#e8365d] hover:underline ${focusClass}`}>Clear date</button>
@@ -141,14 +141,14 @@ export default function ListingsClient({ listings }: Props) {
         </div>
 
         {/* Price range */}
-        <div className="mt-3 border-t border-white/15 pt-3">
+        <div className="min-w-0 sm:col-span-2 xl:col-span-1">
           <p id="explore-price-context" className="flex items-center gap-2 text-sm font-medium text-white/80">
             <SlidersHorizontal size={16} className="text-[#e8365d]" />
             Price range (K)
             <span className="sr-only">Zambian kwacha (ZMW)</span>
           </p>
 
-          <div className="mt-2 flex items-center gap-3">
+          <div className="mt-2 flex items-center gap-2">
             <input
               type="number"
               inputMode="numeric"
@@ -159,9 +159,9 @@ export default function ListingsClient({ listings }: Props) {
               aria-label="Minimum price"
               aria-invalid={priceRangeInvalid}
               aria-describedby={priceRangeInvalid ? "explore-price-context explore-price-error" : "explore-price-context"}
-              className={`${inputClass} sm:w-40`}
+              className={`${inputClass} flex-1 rounded-full py-2.5`}
             />
-            <span className="text-white/70">to</span>
+            <span className="shrink-0 text-white/70">to</span>
             <input
               type="number"
               inputMode="numeric"
@@ -172,7 +172,7 @@ export default function ListingsClient({ listings }: Props) {
               aria-label="Maximum price"
               aria-invalid={priceRangeInvalid}
               aria-describedby={priceRangeInvalid ? "explore-price-context explore-price-error" : "explore-price-context"}
-              className={`${inputClass} sm:w-40`}
+              className={`${inputClass} flex-1 rounded-full py-2.5`}
             />
           </div>
 
@@ -199,7 +199,7 @@ export default function ListingsClient({ listings }: Props) {
           )}
         </div>
 
-        <div role="group" aria-labelledby="explore-categories" className="flex flex-wrap gap-3">
+        <div role="group" aria-labelledby="explore-categories" className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
@@ -207,8 +207,8 @@ export default function ListingsClient({ listings }: Props) {
               onClick={() => setCategory(c.value)}
               className={`${focusClass} ${
                 category === c.value
-                  ? "rounded-full bg-[#e8365d] px-5 py-2.5 text-sm font-medium text-black shadow-sm"
-                  : "rounded-full border border-white/40 bg-[#0f0f0f] px-5 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                  ? "rounded-full border border-[#e8365d] bg-[#e8365d] px-4 py-2 text-sm font-medium text-black shadow-sm"
+                  : "rounded-full border border-white/40 bg-[#0f0f0f] px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
               }`}
             >
               {c.label}
