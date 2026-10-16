@@ -40,6 +40,9 @@ const PRICE_UNIT: Record<string, string> = {
 const inputClass =
   "w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#7A1F2B] focus:bg-white focus:ring-2 focus:ring-[#7A1F2B]/20"
 
+const focusClass =
+  "focus-visible:ring-2 focus-visible:ring-[#7A1F2B] focus-visible:ring-offset-2"
+
 // Shows the search, filters and listing cards. Gets the listings from the page; never fetches.
 export default function ListingsClient({ listings }: Props) {
   const [category, setCategory] = useState("all")
@@ -96,6 +99,7 @@ export default function ListingsClient({ listings }: Props) {
             />
             <input
               type="text"
+              aria-label="Search listings"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search stays, events, activities..."
@@ -105,6 +109,7 @@ export default function ListingsClient({ listings }: Props) {
 
           {/* Location */}
           <select
+            aria-label="Select location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className={`${inputClass} text-gray-700 sm:w-52`}
@@ -127,7 +132,7 @@ export default function ListingsClient({ listings }: Props) {
               aria-describedby="explore-date-help" className={`${inputClass} sm:w-52`} />
             {date && (
               <button type="button" onClick={() => setDate("")}
-                className="text-sm font-medium text-[#7A1F2B] hover:underline">Clear date</button>
+                className={`text-sm font-medium text-[#7A1F2B] hover:underline ${focusClass}`}>Clear date</button>
             )}
           </div>
           <p id="explore-date-help" className="mt-2 text-xs text-gray-500">
@@ -137,9 +142,10 @@ export default function ListingsClient({ listings }: Props) {
 
         {/* Price range */}
         <div className="mt-4 border-t border-gray-100 pt-4">
-          <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <p id="explore-price-context" className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <SlidersHorizontal size={16} className="text-[#7A1F2B]" />
             Price range (K)
+            <span className="sr-only">Zambian kwacha (ZMW)</span>
           </p>
 
           <div className="mt-2 flex items-center gap-3">
@@ -151,6 +157,8 @@ export default function ListingsClient({ listings }: Props) {
               onChange={(e) => setMinPrice(e.target.value)}
               placeholder="Min"
               aria-label="Minimum price"
+              aria-invalid={priceRangeInvalid}
+              aria-describedby={priceRangeInvalid ? "explore-price-context explore-price-error" : "explore-price-context"}
               className={`${inputClass} sm:w-40`}
             />
             <span className="text-gray-400">to</span>
@@ -162,12 +170,14 @@ export default function ListingsClient({ listings }: Props) {
               onChange={(e) => setMaxPrice(e.target.value)}
               placeholder="Max"
               aria-label="Maximum price"
+              aria-invalid={priceRangeInvalid}
+              aria-describedby={priceRangeInvalid ? "explore-price-context explore-price-error" : "explore-price-context"}
               className={`${inputClass} sm:w-40`}
             />
           </div>
 
           {priceRangeInvalid && (
-            <p className="mt-2 text-xs text-red-600">
+            <p id="explore-price-error" className="mt-2 text-xs text-red-600">
               The minimum price is higher than the maximum.
             </p>
           )}
@@ -177,28 +187,29 @@ export default function ListingsClient({ listings }: Props) {
       {/* Categories */}
       <section className="mt-8">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
+          <h2 id="explore-categories" className="text-lg font-semibold text-gray-900">Categories</h2>
 
           {hasAnyFilter && (
             <button
               onClick={clearFilters}
-              className="text-sm font-medium text-[#7A1F2B] transition hover:underline"
+              className={`text-sm font-medium text-[#7A1F2B] transition hover:underline ${focusClass}`}
             >
               Clear all filters
             </button>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div role="group" aria-labelledby="explore-categories" className="flex flex-wrap gap-3">
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
+              aria-pressed={category === c.value}
               onClick={() => setCategory(c.value)}
-              className={
+              className={`${focusClass} ${
                 category === c.value
                   ? "rounded-full bg-[#7A1F2B] px-5 py-2.5 text-sm font-medium text-white shadow-sm"
                   : "rounded-full border border-[#7A1F2B]/20 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-[#F7EDEF] hover:text-[#7A1F2B]"
-              }
+              }`}
             >
               {c.label}
             </button>
@@ -228,7 +239,7 @@ export default function ListingsClient({ listings }: Props) {
             </p>
             <button
               onClick={clearFilters}
-              className="mt-5 rounded-xl bg-[#7A1F2B] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5E1721]"
+              className={`mt-5 rounded-xl bg-[#7A1F2B] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5E1721] ${focusClass}`}
             >
               Clear filters
             </button>
@@ -240,7 +251,7 @@ export default function ListingsClient({ listings }: Props) {
               <Link
                 key={listing.id}
                 href={`/user/listings/${listing.id}`}
-                className="group overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                className={`group overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${focusClass}`}
               >
                 {/* Image */}
                 <div className="relative h-56 overflow-hidden bg-[#F7EDEF]">
