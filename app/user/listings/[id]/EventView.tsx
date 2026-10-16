@@ -1,6 +1,13 @@
 import { CalendarDays, Clock, MapPin, Ticket, Users } from "lucide-react"
 import BookNowButton from "./BookNowButton"
 
+type EventDetails = {
+  event_type: string | null
+  capacity: number | null
+  available_slots: number | null
+  event_time: string | null
+}
+
 type EventListing = {
   id: string
   title: string
@@ -8,21 +15,17 @@ type EventListing = {
   price: number | null
   location: string | null
   image_url: string | null
-  events?: {
-    event_type: string | null
-    capacity: number | null
-    available_slots: number | null
-    event_time: string | null
-  }[] | null
+  events?: EventDetails | EventDetails[] | null
 }
-
 type Props = {
   listing: EventListing
 }
 
 // Shows an event listing. Takes data in, renders it. No fetching here.
 export default function EventView({ listing }: Props) {
-  const event = listing.events?.[0]
+ const event = Array.isArray(listing.events)
+  ? listing.events[0]
+  : listing.events
   const price =
     listing.price !== null ? `K${listing.price.toLocaleString("en-ZM")}` : "Price on request"
 

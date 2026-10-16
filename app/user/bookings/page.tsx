@@ -1,10 +1,197 @@
-import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { CalendarDays, MapPin, Users } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 
+// Supabase types the joined listing as a list, but each booking has one listing
 function one<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null
   return value ?? null
+}
+
+type Booking = {
+  id: string
+  booking_reference: string | null
+  booking_date: string | null
+  check_in: string | null
+  check_out: string | null
+  nights: number | null
+  guests: number | null
+  quantity: number
+  payment_method: string | null
+  payment_status: string | null
+  status: string
+  created_at: string
+  listing: {
+    id: string
+    title: string
+    location: string | null
+    price: number | null
+    image_url: string | null
+    listing_type: string
+  } | null
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-[#D4A64A]/15 text-[#8A6A1F]",
+  confirmed: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700",
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Waiting for host",
+  confirmed: "Confirmed",
+  cancelled: "Cancelled",
+}
+
+// "2026-10-16" -> "Fri 16 Oct"
+function day(date: string) {
+  return new Date(`${date.slice(0, 10)}T12:00:00+02:00`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "Africa/Lusaka",
+  })
+}
+
+function dateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Africa/Lusaka",
+  })
+}
+
+// When, how many, and the total, depending on what was booked
+function details(b: Booking) {
+  const price = b.listing?.price ?? null
+  const type = b.listing?.listing_type
+
+  if (type === "stay" && b.check_in && b.check_out) {
+    const nights = b.nights ?? 1
+    const guests = b.guests ?? 1
+    return {
+      when: `${day(b.check_in)} → ${day(b.check_out)}`,
+      who: `${nights} ${nights === 1 ? "night" : "nights"} · ${guests} ${guests === 1 ? "guest" : "guests"}`,
+      total: price !== null ? price * nights : null,
+      date: b.check_in,
+    }
+  }
+  if (type === "event") {
+    return {
+      when: b.booking_date ? dateTime(b.booking_date) : "Date to be confirmed",
+      who: `${b.quantity} ${b.quantity === 1 ? "ticket" : "tickets"}`,
+      total: price !== null ? price * b.quantity : null,
+      date: b.booking_date,
+    }
+  }
+  // activity: people are saved in guests
+  const people = b.guests ?? b.quantity
+  return {
+    when: b.booking_date ? day(b.booking_date) : "Date to be confirmed",
+    who: `${people} ${people === 1 ? "person" : "people"}`,
+    total: price !== null ? price * people : null,
+    date: b.booking_date,
+  }
+}
+
+function todayInZambia() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lusaka" })
+}
+
+function BookingCard({ booking }: { booking: Booking }) {
+  const listing = booking.listing
+  const { when, who, total } = details(booking)
+  const isPaid = booking.payment_status === "paid"
+
+  return (
+    <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5">
+      <div className="flex gap-4">
+        {/* Small photo: keeps the text on screen on phones */}
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F7EDEF] sm:h-24 sm:w-32">
+          {listing?.image_url ? (
+            <img src={listing.image_url} alt={listing.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-[10px] text-[#7A1F2B]/60">No photo</div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                STATUS_STYLES[booking.status] ?? "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {STATUS_LABEL[booking.status] ?? booking.status}
+            </span>
+            {booking.status !== "cancelled" && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  isPaid ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {isPaid ? "Paid" : "Not paid yet"}
+              </span>
+            )}
+          </div>
+
+          <h2 className="mt-1.5 line-clamp-2 text-base font-semibold leading-snug text-gray-900">
+            {listing?.title ?? "Listing no longer available"}
+          </h2>
+
+          {listing?.location && (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+              <MapPin size={12} className="shrink-0 text-[#7A1F2B]" />
+              <span className="truncate">{listing.location}</span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Details: full width, so nothing gets squeezed on small screens */}
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-[#F7EDEF]/60 p-3 text-sm">
+        <div className="col-span-2 flex items-start gap-2 sm:col-span-1">
+          <CalendarDays size={16} className="mt-0.5 shrink-0 text-[#7A1F2B]" />
+          <div>
+            <dt className="sr-only">When</dt>
+            <dd className="font-medium text-gray-900">{when}</dd>
+          </div>
+        </div>
+        <div className="col-span-2 flex items-start gap-2 sm:col-span-1">
+          <Users size={16} className="mt-0.5 shrink-0 text-[#7A1F2B]" />
+          <div>
+            <dt className="sr-only">Booked for</dt>
+            <dd className="font-medium text-gray-900">{who}</dd>
+          </div>
+        </div>
+        <div>
+          <dt className="text-xs text-gray-500">Reference</dt>
+          <dd className="font-mono text-sm font-semibold text-gray-900">{booking.booking_reference ?? "-"}</dd>
+        </div>
+        <div className="text-right">
+          <dt className="text-xs text-gray-500">
+            Total · {booking.payment_method === "card" ? "card" : "mobile money"}
+          </dt>
+          <dd className="text-base font-bold text-[#7A1F2B]">
+            {total !== null ? `K${total.toLocaleString("en-ZM")}` : "On request"}
+          </dd>
+        </div>
+      </dl>
+
+      {listing?.id && (
+        <Link
+          href={`/user/listings/${listing.id}`}
+          className="mt-3 block rounded-xl border border-[#7A1F2B]/20 py-2.5 text-center text-sm font-semibold text-[#7A1F2B] transition hover:bg-[#F7EDEF]"
+        >
+          View listing
+        </Link>
+      )}
+    </article>
+  )
 }
 
 export default async function MyBookingsPage() {
@@ -13,12 +200,9 @@ export default async function MyBookingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  if (!user) redirect("/auth/login?next=/user/bookings")
 
-  if (!user) {
-    redirect("/auth/login")
-  }
-
-  const { data: bookings, error } = await supabase
+  const { data: rows, error } = await supabase
     .from("bookings")
     .select(`
       id,
@@ -29,291 +213,87 @@ export default async function MyBookingsPage() {
       nights,
       guests,
       quantity,
-      customer_name,
       payment_method,
       payment_status,
-      amount_paid,
       status,
-
-      listings (
-        id,
-        title,
-        location,
-        price,
-        image_url,
-        listing_type
-      )
+      created_at,
+      listings ( id, title, location, price, image_url, listing_type )
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
-  if (error) {
-    console.error("Error fetching bookings:", error)
+  if (error) console.error("Error fetching bookings:", error.message)
+
+  const bookings: Booking[] = (rows ?? []).map(({ listings, ...b }) => ({ ...b, listing: one(listings) }))
+
+  // Upcoming = not cancelled and today or later; everything else goes under "Past and cancelled"
+  const today = todayInZambia()
+  const isUpcoming = (b: Booking) => {
+    const date = details(b).date
+    return b.status !== "cancelled" && (!date || date.slice(0, 10) >= today)
   }
+  const upcoming = bookings.filter(isUpcoming)
+  const past = bookings.filter((b) => !isUpcoming(b))
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="mx-auto max-w-5xl">
-
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            My Bookings
-          </h1>
-
-          <p className="mt-2 text-gray-500">
-            View and manage your bookings.
+    <main className="min-h-screen bg-gray-50">
+      <section className="bg-[#7A1F2B]">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">My bookings</h1>
+          <p className="mt-1 text-sm text-[#F7EDEF]/90 sm:text-base">
+            Your stays, events and activities in one place.
           </p>
         </div>
+      </section>
 
-        {/* Empty state */}
-        {!bookings || bookings.length === 0 ? (
-          <div className="mt-8 rounded-2xl bg-white p-10 text-center shadow-sm">
-
-            <h2 className="text-xl font-semibold text-gray-900">
-              No bookings yet
-            </h2>
-
-            <p className="mt-2 text-gray-500">
-              Your bookings will appear here once you make one.
-            </p>
-
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        {bookings.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#7A1F2B]/30 bg-white p-8 text-center">
+            <h2 className="text-lg font-semibold text-gray-900">No bookings yet</h2>
+            <p className="mt-2 text-sm text-gray-500">Your bookings will appear here once you make one.</p>
             <Link
               href="/user"
-              className="mt-6 inline-block rounded-xl bg-black px-6 py-3 font-medium text-white hover:bg-gray-800"
+              className="mt-5 inline-block rounded-full bg-[#7A1F2B] px-6 py-3 text-sm font-semibold text-white hover:bg-[#5E1721]"
             >
-              Explore Listings
+              Explore listings
             </Link>
-
           </div>
         ) : (
-          <div className="mt-8 space-y-6">
-
-            {bookings.map((booking) => {
-              const listing = one(booking.listings)
-
-              const listingType =
-                listing?.listing_type
-
-              const isStay =
-                listingType === "stay"
-
-              const isEvent =
-                listingType === "event"
-
-              const isActivity =
-                listingType === "activity"
-
-              return (
-                <div
-                  key={booking.id}
-                  className="overflow-hidden rounded-2xl bg-white shadow-sm"
-                >
-
-                  {/* Image */}
-                  {listing?.image_url && (
-                    <img
-                      src={listing.image_url}
-                      alt={listing.title}
-                      className="h-56 w-full object-cover"
-                    />
-                  )}
-
-                  <div className="p-6">
-
-                    {/* Type + status */}
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                        {isStay
-                          ? "Stay"
-                          : isEvent
-                          ? "Event"
-                          : isActivity
-                          ? "Activity"
-                          : "Booking"}
-                      </span>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          booking.status === "confirmed"
-                            ? "bg-green-100 text-green-700"
-                            : booking.status === "cancelled"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-
-                    </div>
-
-                    {/* Listing title */}
-                    <h2 className="mt-4 text-2xl font-bold text-gray-900">
-                      {listing?.title}
-                    </h2>
-
-                    {listing?.location && (
-                      <p className="mt-1 text-sm text-gray-500">
-                        {listing.location}
-                      </p>
-                    )}
-
-                    {/* Stay information */}
-                    {isStay && (
-                      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-
-                        <div className="rounded-xl bg-gray-50 p-4">
-                          <p className="text-sm text-gray-500">
-                            Check-in
-                          </p>
-
-                          <p className="mt-1 font-semibold">
-                            {booking.check_in}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-gray-50 p-4">
-                          <p className="text-sm text-gray-500">
-                            Check-out
-                          </p>
-
-                          <p className="mt-1 font-semibold">
-                            {booking.check_out}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-gray-50 p-4">
-                          <p className="text-sm text-gray-500">
-                            Guests
-                          </p>
-
-                          <p className="mt-1 font-semibold">
-                            {booking.guests}
-                          </p>
-                        </div>
-
-                      </div>
-                    )}
-
-                    {/* Event information */}
-                    {isEvent && (
-                      <div className="mt-6 rounded-xl bg-gray-50 p-4">
-
-                        <p className="text-sm text-gray-500">
-                          Attendees
-                        </p>
-
-                        <p className="mt-1 text-lg font-semibold">
-                          {booking.quantity}{" "}
-                          {booking.quantity === 1
-                            ? "person"
-                            : "people"}
-                        </p>
-
-                      </div>
-                    )}
-
-                    {/* Activity information */}
-                    {isActivity && (
-                      <div className="mt-6 rounded-xl bg-gray-50 p-4">
-
-                        <p className="text-sm text-gray-500">
-                          Participants
-                        </p>
-
-                        <p className="mt-1 text-lg font-semibold text-black">
-                          {booking.quantity}{" "}
-                          {booking.quantity === 1
-                            ? "person"
-                            : "people"}
-                        </p>
-
-                      </div>
-                    )}
-
-                    {/* Booking information */}
-                    <div className="mt-6 border-t pt-5">
-
-                      <div className="grid gap-4 sm:grid-cols-2">
-
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Booking reference
-                          </p>
-
-                          <p className="mt-1 font-medium text-black">
-                            {booking.booking_reference ?? "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Payment
-                          </p>
-
-                          <p className="mt-1 font-medium capitalize text-black">
-                            {booking.payment_method
-                              ?.replace("_", " ") ?? "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Payment status
-                          </p>
-
-                          <p className="mt-1 font-medium capitalize text-green-600">
-                            {booking.payment_status ?? "—"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm text-gray-500">
-                            Amount paid
-                          </p>
-
-                          <p className="mt-1 text-lg font-bold text-green-500">
-                            ZMK{" "}
-                            {(
-                              booking.amount_paid ?? 0
-                            ).toLocaleString()}
-                          </p>
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    {/* Actions */}
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-
-                      {listing?.id && (
-                        <Link
-                          href={`/user/listings/${listing.id}`}
-                          className="flex-1 rounded-xl border border-gray-300 px-5 py-3 text-center font-medium text-gray-900 hover:bg-gray-50"
-                        >
-                          View Listing
-                        </Link>
-                      )}
-
-                      <Link
-                        href={`/user/bookings/confirmation?id=${booking.id}`}
-                        className="flex-1 rounded-xl bg-black px-5 py-3 text-center font-medium text-white hover:bg-gray-800"
-                      >
-                        View Booking
-                      </Link>
-
-                    </div>
-
-                  </div>
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Upcoming ({upcoming.length})
+              </h2>
+              {upcoming.length === 0 ? (
+                <p className="mt-3 rounded-2xl bg-white p-5 text-sm text-gray-500 shadow-sm">
+                  Nothing coming up.{" "}
+                  <Link href="/user" className="font-semibold text-[#7A1F2B] hover:underline">
+                    Find something to do
+                  </Link>
+                </p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {upcoming.map((b) => (
+                    <BookingCard key={b.id} booking={b} />
+                  ))}
                 </div>
-              )
-            })}
+              )}
+            </section>
 
+            {past.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  Past and cancelled ({past.length})
+                </h2>
+                <div className="mt-3 space-y-3 opacity-80">
+                  {past.map((b) => (
+                    <BookingCard key={b.id} booking={b} />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
-
       </div>
     </main>
   )
