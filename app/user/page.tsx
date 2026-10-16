@@ -13,11 +13,11 @@ export default async function UserPage() {
   })
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-black text-white">
       {/* Intro */}
-      <section className="bg-[#7A1F2B]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#F7EDEF]/80">
+      <section className="bg-black">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          <p className="text-sm font-semibold uppercase tracking-wider text-[#e8365d]">
             Explore Zambia
           </p>
 
@@ -25,22 +25,22 @@ export default async function UserPage() {
             Discover something new
           </h1>
 
-          <p className="mt-3 max-w-2xl text-[#F7EDEF]/90">
+          <p className="mt-3 max-w-2xl text-white/70">
             Find stays, events and activities around you, and book in a few taps.
           </p>
         </div>
       </section>
 
-      {/* Search, categories and listings. Pulled up to overlap the burgundy band */}
-      <div className="mx-auto -mt-8 max-w-7xl px-4 pb-12 sm:px-6">
+      {/* Search, categories and listings */}
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
         {result.success ? (
           <ListingsClient listings={(result.listings ?? []).map((listing) => ({
             ...listing, eventSchedule: normalizeEventSchedule(listing.events),
           }))} />
         ) : (
-          <section role="alert" className="rounded-2xl bg-white p-8 shadow-md">
-            <h2 className="text-lg font-semibold text-gray-900">Unable to load listings</h2>
-            <p className="mt-2 text-sm text-gray-600">
+          <section role="alert" className="rounded-2xl border border-white/20 bg-[#141414] p-8">
+            <h2 className="text-lg font-semibold text-white">Unable to load listings</h2>
+            <p className="mt-2 text-sm text-white/70">
               Please try refreshing this page. Your listings could not be retrieved.
             </p>
           </section>
