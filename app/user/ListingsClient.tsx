@@ -37,6 +37,12 @@ const PRICE_UNIT: Record<string, string> = {
   activity: "/ person",
 }
 
+const CATEGORY_BADGE_CLASS: Record<string, string> = {
+  stay: "border-blue-400/40 text-blue-300",
+  event: "border-[#e8365d]/40 text-rose-300",
+  activity: "border-emerald-400/40 text-emerald-300",
+}
+
 const inputClass =
   "w-full min-w-0 border border-white/40 bg-white/5 px-4 text-sm text-white outline-none transition placeholder:text-white/60 focus:border-[#e8365d] focus:bg-[#1a1a1a] focus:ring-2 focus:ring-[#e8365d] [color-scheme:dark]"
 
@@ -251,15 +257,15 @@ export default function ListingsClient({ listings }: Props) {
               <Link
                 key={listing.id}
                 href={`/user/listings/${listing.id}`}
-                className={`group overflow-hidden rounded-2xl bg-[#0f0f0f] shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${focusClass}`}
+                className={`group min-w-0 rounded-xl bg-[#0f0f0f] ${focusClass}`}
               >
                 {/* Image */}
-                <div className="relative h-56 overflow-hidden bg-[#1a1a1a]">
+                <div className="relative h-56 overflow-hidden rounded-xl bg-[#1a1a1a]">
                   {listing.image_url ? (
                     <img
                       src={listing.image_url}
                       alt={listing.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-white/70">
@@ -267,33 +273,33 @@ export default function ListingsClient({ listings }: Props) {
                     </div>
                   )}
 
-                  <span className="absolute left-4 top-4 rounded-full bg-[#e8365d] px-3 py-1 text-xs font-semibold capitalize text-black">
+                  <span className={`absolute left-2.5 top-2.5 rounded-full border bg-[#0f0f0f] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${Object.prototype.hasOwnProperty.call(CATEGORY_BADGE_CLASS, listing.listing_type) ? CATEGORY_BADGE_CLASS[listing.listing_type] : "border-white/40 text-white"}`}>
                     {listing.listing_type}
                   </span>
                 </div>
 
                 {/* Content */}
-                <div className="p-5">
-                  <h3 className="truncate text-lg font-semibold text-white group-hover:text-[#e8365d]">
+                <div className="px-1 pb-3 pt-2.5">
+                  <h3 className="line-clamp-2 break-words text-sm font-bold leading-snug text-white transition-colors duration-200 group-hover:text-[#e8365d]">
                     {listing.title}
                   </h3>
 
                   {listing.description && (
-                    <p className="mt-2 line-clamp-2 text-sm leading-5 text-white/70">
+                    <p className="mt-1.5 line-clamp-2 break-words text-sm leading-5 text-white/70">
                       {listing.description}
                     </p>
                   )}
 
                   {listing.location && (
-                    <div className="mt-4 flex items-center gap-2 text-sm text-white/70">
+                    <div className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-white/70">
                       <MapPin size={16} className="shrink-0 text-[#e8365d]" />
-                      <span className="truncate">{listing.location}</span>
+                      <span className="min-w-0 break-words">{listing.location}</span>
                     </div>
                   )}
 
                   {/* Price + view */}
-                  <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-4">
-                    <p className="text-lg font-bold text-[#e8365d]">
+                  <div className="mt-2.5 flex flex-wrap items-end justify-between gap-2">
+                    <p className="min-w-0 break-words text-sm font-bold text-white">
                       {listing.price !== null
                         ? `K${listing.price.toLocaleString("en-ZM")}`
                         : "Price on request"}
@@ -304,7 +310,7 @@ export default function ListingsClient({ listings }: Props) {
                       )}
                     </p>
 
-                    <span className="rounded-lg bg-[#e8365d] px-4 py-2 text-sm font-medium text-black transition group-hover:bg-[#e8365d]/95">
+                    <span className="rounded-full border border-white/40 px-3 py-1 text-xs font-medium text-white/80 transition-colors group-hover:border-[#e8365d] group-hover:text-white">
                       View
                     </span>
                   </div>
