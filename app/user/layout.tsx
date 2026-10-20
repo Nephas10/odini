@@ -1,16 +1,6 @@
 import UserNavbar from "@/components/UserNavBar"
-import { Geist, Geist_Mono } from "next/font/google"
+import UserTypography from "@/components/UserTypography"
 import React from "react"
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-})
 
 export default function UserLayout({
   children,
@@ -18,10 +8,10 @@ export default function UserLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <UserTypography>
       <UserNavbar />
 
       {children}
-    </>
+    </UserTypography>
   )
 }

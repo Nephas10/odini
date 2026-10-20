@@ -12,7 +12,7 @@ type Props = {
 
 // Full-height swipe feed: one listing per screen, snapping as you scroll.
 // Height = screen minus the sticky navbar (taller on mobile because of its second row).
-const FEED_HEIGHT = "h-[calc(100dvh-108px)] md:h-[calc(100dvh-64px)]"
+const FEED_HEIGHT = "h-[calc(100dvh-var(--odini-user-header-height))]"
 
 export default function FYPFeed({ listings }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -50,7 +50,7 @@ export default function FYPFeed({ listings }: Props) {
   const isLast = current >= listings.length - 1
 
   return (
-    <div className={`relative ${FEED_HEIGHT} w-full bg-[#1A0609]`}>
+    <div className={`relative ${FEED_HEIGHT} w-full min-w-0 overflow-hidden bg-black`}>
       <div
         ref={containerRef}
         onScroll={handleScroll}
@@ -62,7 +62,7 @@ export default function FYPFeed({ listings }: Props) {
       </div>
 
       {/* Position counter */}
-      <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+      <div className="pointer-events-none absolute right-[calc(1rem+env(safe-area-inset-right,0px))] top-4 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
         {current + 1} / {listings.length}
       </div>
 
@@ -71,7 +71,7 @@ export default function FYPFeed({ listings }: Props) {
         <button
           onClick={goToNext}
           aria-label="Next listing"
-          className="absolute bottom-6 right-6 hidden h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 md:flex"
+          className="absolute top-14 right-[calc(1.5rem+env(safe-area-inset-right,0px))] hidden h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d] md:flex"
         >
           <ChevronDown size={22} />
         </button>
