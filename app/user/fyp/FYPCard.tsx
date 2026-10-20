@@ -10,6 +10,12 @@ type Props = {
   isFirst?: boolean
 }
 
+const CATEGORY_BADGE_CLASS: Record<string, string> = {
+  stay: "border-blue-500/30 bg-blue-500/20 text-blue-400",
+  event: "border-[#e8365d]/30 bg-[#e8365d]/20 text-[#e8365d]",
+  activity: "border-emerald-500/30 bg-emerald-500/20 text-emerald-400",
+}
+
 const PRICE_UNIT: Record<string, string> = {
   stay: "/ night",
   event: "/ ticket",
@@ -34,12 +40,15 @@ function formatEventDate(iso: string) {
 }
 
 // One full-height listing in the For You feed.
-// Fits phones (text leaves room for the side buttons) and short screens (less text shown).
+// Long content can scroll without covering the actions or decorative hint.
 export default function FYPCard({ listing, isFirst = false }: Props) {
   const [shareMessage, setShareMessage] = useState("")
 
   const isEvent = listing.listing_type === "event"
   const isSoldOut = isEvent && listing.available_slots === 0
+  const categoryBadgeClass = Object.prototype.hasOwnProperty.call(CATEGORY_BADGE_CLASS, listing.listing_type)
+    ? CATEGORY_BADGE_CLASS[listing.listing_type]
+    : "border-white/30 bg-white/10 text-white"
   const listingUrl = `/user/listings/${listing.id}`
 
   async function handleShare() {
@@ -58,7 +67,7 @@ export default function FYPCard({ listing, isFirst = false }: Props) {
   }
 
   return (
-    <article className="relative h-full w-full flex-shrink-0 snap-start overflow-hidden bg-[#1A0609]">
+    <article className="relative h-full w-full min-w-0 flex-shrink-0 snap-start snap-always overflow-hidden bg-black">
       {/* Background image */}
       <div className="absolute inset-0">
         {listing.image_url ? (
@@ -69,129 +78,131 @@ export default function FYPCard({ listing, isFirst = false }: Props) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#7A1F2B] to-[#1A0609]">
+          <div className="flex h-full w-full items-center justify-center bg-black">
             <p className="text-sm text-white/40">Photo coming soon</p>
           </div>
         )}
 
         {/* Gradients keep the text readable on any photo */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
       </div>
 
-      {/* Content: right padding on phones leaves a lane for the side buttons */}
-      <div className="relative flex h-full flex-col justify-end px-5 pb-[calc(3.5rem+env(safe-area-inset-bottom))] pr-20 sm:px-8 sm:pr-24 md:px-12 md:pb-16 [@media(max-height:420px)]:pb-4">
-        <div className="max-w-xl">
+      {/* Full-width text; the details and actions reserve their own side-action lane. */}
+      <div className="relative flex h-full min-w-0 flex-col overflow-y-auto pt-5 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))] md:pl-[max(2.5rem,env(safe-area-inset-left,0px))] md:pr-[max(2.5rem,env(safe-area-inset-right,0px))]">
+        <div className="mt-auto w-full min-w-0 max-w-lg shrink-0 md:max-w-[27rem]">
           {/* Type + reason */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[#7A1F2B] px-3 py-1 text-xs font-semibold capitalize text-white">
+          <div className="flex flex-col items-start gap-2">
+            <span className={`inline-flex items-center self-stretch rounded-full border px-2 py-0.5 text-[10px] font-normal [font-family:var(--odini-font-display,inherit)] uppercase tracking-widest ${categoryBadgeClass}`}>
               {listing.listing_type}
             </span>
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-md ${
-                isSoldOut ? "bg-red-600/90 text-white" : "bg-[#D4A64A]/90 text-[#3D0F15]"
+              className={`inline-flex min-w-0 max-w-full items-start gap-1 rounded-full px-2 py-0.5 text-xs font-semibold break-words backdrop-blur-md ${
+                isSoldOut ? "border border-white/30 bg-black/60 text-white" : "border border-[#e8365d]/30 bg-black/60 text-white"
               }`}
             >
-              {!isSoldOut && <Sparkles size={12} />}
+              {!isSoldOut && <Sparkles size={12} className="shrink-0 text-[#e8365d]" />}
               {listing.reason}
             </span>
           </div>
 
-          {/* Title (shorter on short screens) */}
-          <h2 className="mt-3 line-clamp-3 [@media(max-height:420px)]:mt-1.5 [@media(max-height:420px)]:line-clamp-1 text-2xl font-bold leading-tight text-white sm:text-3xl md:text-5xl [@media(max-height:600px)]:line-clamp-2 [@media(max-height:600px)]:text-xl">
+          {/* Keep the prototype hierarchy; short screens retain access through scrolling. */}
+          <h2 className="mt-3 break-words text-3xl font-normal [font-family:var(--odini-font-display,inherit)] leading-tight text-white md:text-4xl">
             {listing.title}
           </h2>
 
-          {/* Description (hidden on very short screens) */}
+          {/* Description remains available on short screens. */}
           {listing.description && (
-            <p className="mt-2 line-clamp-2 max-w-lg text-sm leading-relaxed text-white/75 sm:line-clamp-3 md:text-base [@media(max-height:600px)]:hidden">
+            <p className="mt-2 line-clamp-2 max-w-lg break-words text-sm leading-relaxed text-white/75">
               {listing.description}
             </p>
           )}
 
-          {/* Details */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/75 sm:text-sm [@media(max-height:420px)]:hidden">
-            {isEvent && listing.event_time && (
-              <span className="flex items-center gap-1.5">
-                <CalendarDays size={15} className="text-[#D4A64A]" />
-                {formatEventDate(listing.event_time)}
-              </span>
-            )}
-            {listing.location && (
-              <span className="flex items-center gap-1.5">
-                <MapPin size={15} className="text-[#D4A64A]" />
-                <span className="line-clamp-1">{listing.location}</span>
-              </span>
-            )}
-          </div>
+          <div className="relative mt-3 min-h-[104px] pr-16">
+            {/* Details */}
+            <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs text-white/75">
+              {listing.location && (
+                <span className="flex min-w-0 max-w-full items-center gap-1.5">
+                  <MapPin size={15} className="shrink-0 text-white/75" />
+                  <span className="min-w-0 break-words">{listing.location}</span>
+                </span>
+              )}
+              {isEvent && listing.event_time && (
+                <span className="flex min-w-0 max-w-full items-center gap-1.5">
+                  <CalendarDays size={15} className="shrink-0 text-white/75" />
+                  {formatEventDate(listing.event_time)}
+                </span>
+              )}
 
-          {/* Price */}
-          <p className="mt-2 text-lg font-bold text-white sm:text-xl">
-            {listing.price != null ? `K${listing.price.toLocaleString("en-ZM")}` : "Price on request"}
-            {listing.price != null && PRICE_UNIT[listing.listing_type] && (
-              <span className="ml-1 text-sm font-medium text-white/60">
-                {PRICE_UNIT[listing.listing_type]}
-              </span>
-            )}
-          </p>
+              {/* Price */}
+              <p className="min-w-0 break-words text-sm font-normal [font-family:var(--odini-font-display,inherit)] text-white">
+                {listing.price != null ? `K${listing.price.toLocaleString("en-ZM")}` : "Price on request"}
+                {listing.price != null && PRICE_UNIT[listing.listing_type] && (
+                  <span className="ml-1 text-sm font-normal text-white/60">
+                    {PRICE_UNIT[listing.listing_type]}
+                  </span>
+                )}
+              </p>
+            </div>
 
-          {/* Buttons */}
-          <div className="mt-4 flex flex-wrap gap-3 [@media(max-height:420px)]:mt-2 [&>*]:[@media(max-height:420px)]:py-2">
-            {isSoldOut ? (
-              <span className="cursor-not-allowed rounded-full bg-white/20 px-5 py-3 text-sm font-semibold text-white/70">
-                Sold out
-              </span>
-            ) : (
+            {/* Buttons */}
+            <div className="mt-5 flex flex-wrap gap-3">
+              {isSoldOut ? (
+                <span className="cursor-not-allowed rounded-full bg-white/20 px-5 py-3 text-sm font-semibold text-white/70">
+                  Sold out
+                </span>
+              ) : (
+                <Link
+                  href={`${listingUrl}/book`}
+                  className="inline-flex min-h-11 max-w-full items-center justify-center rounded-full bg-[#e8365d] px-5 py-2.5 text-center text-sm font-normal [font-family:var(--odini-font-display,inherit)] break-words text-black transition-colors hover:bg-[#d02d50] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
+                >
+                  {BOOK_LABEL[listing.listing_type] ?? "Book now"}
+                </Link>
+              )}
               <Link
-                href={`${listingUrl}/book`}
-                className="rounded-full bg-[#7A1F2B] px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#5E1721]"
+                href={listingUrl}
+                className="inline-flex min-h-11 max-w-full items-center justify-center rounded-full border border-white/30 px-5 py-2.5 text-center text-sm font-normal [font-family:var(--odini-font-display,inherit)] break-words text-white transition-colors hover:border-white hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
               >
-                {BOOK_LABEL[listing.listing_type] ?? "Book now"}
+                See more
               </Link>
-            )}
-            <Link
-              href={listingUrl}
-              className="rounded-full border border-white/40 px-5 py-3 text-sm font-medium text-white transition hover:border-white hover:bg-white/10"
-            >
-              See more
-            </Link>
+            </div>
+            {/* Side actions have a dedicated lane, clear of text and booking links. */}
+            <div className="absolute right-0 bottom-0 flex flex-col items-center gap-4">
+              {/* Save: not wired up yet */}
+              <button
+                type="button"
+                aria-label="Save listing"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
+              >
+                <Bookmark size={19} />
+              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  aria-label="Share listing"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
+                >
+                  <Share2 size={18} />
+                </button>
+                {shareMessage && (
+                  <span className="absolute right-full top-1/2 mr-2 w-max max-w-[calc(100vw-6rem)] -translate-y-1/2 rounded-lg bg-black/80 px-3 py-2 text-xs break-words text-white">
+                    {shareMessage}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Side actions, in the lane kept free on the right */}
-      <div className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] right-4 flex flex-col items-center gap-4 sm:right-6 md:bottom-24 md:right-8 [@media(max-height:420px)]:bottom-4 [@media(max-height:420px)]:gap-2">
-        {/* Save: not wired up yet */}
-        <button
-          type="button"
-          aria-label="Save listing"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
-        >
-          <Bookmark size={19} />
-        </button>
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={handleShare}
-            aria-label="Share listing"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-sm transition hover:bg-black/70"
-          >
-            <Share2 size={18} />
-          </button>
-          {shareMessage && (
-            <span className="absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-black/80 px-3 py-2 text-xs text-white">
-              {shareMessage}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Scroll hint, first card only (phones; desktop has the next button) */}
+      {/* Decorative first-card hint, below the content and hidden from assistive technology. */}
       {isFirst && (
-        <div className="pointer-events-none absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 flex-col items-center text-white/50 md:hidden [@media(max-height:420px)]:hidden">
-          <span className="text-[10px] uppercase tracking-wider">Swipe up</span>
-          <span className="animate-bounce">↑</span>
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 animate-bounce text-white/40 motion-reduce:animate-none">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       )}
     </article>
