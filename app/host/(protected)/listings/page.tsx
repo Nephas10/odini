@@ -2,6 +2,8 @@ import Link from "next/link"
 import { CheckCircle2, Eye, MapPin, Pencil, Plus } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import ListingStatusToggle from "./ListingStatusToggle"
+import DeleteListingButton from "./DeleteListingButton"
+
 
 const PRICE_UNIT: Record<string, string> = {
   stay: "/ night",
@@ -18,13 +20,13 @@ const TABS = [
 type Tab = (typeof TABS)[number]["value"]
 
 type Props = {
-  searchParams: Promise<{ show?: string; saved?: string }>
+  searchParams: Promise<{ show?: string; saved?: string; deleted?: string }>
 }
 
 // Page only: loads the host's listings and shows a card for each.
 // The (protected) layout has already checked this is a logged-in host.
 export default async function HostListingsPage({ searchParams }: Props) {
-  const { show, saved } = await searchParams
+  const { show, saved, deleted } = await searchParams
   const tab: Tab = TABS.some((t) => t.value === show) ? (show as Tab) : "all"
 
   const supabase = await createClient()
@@ -96,6 +98,12 @@ export default async function HostListingsPage({ searchParams }: Props) {
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {deleted === "true" && (
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-800">
+             <CheckCircle2 size={20} className="shrink-0" />
+              Listing deleted successfully.
+          </div>
+        )}
         {/* After creating a listing */}
         {(saved === "published" || saved === "draft" || saved === "updated") && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-800">
@@ -196,6 +204,10 @@ export default async function HostListingsPage({ searchParams }: Props) {
                           <Pencil size={14} />
                           Edit
                         </Link>
+                        <DeleteListingButton
+                          listingId={listing.id}
+                          listingTitle={listing.title}
+                        />
                       </div>
                     </div>
                   </div>

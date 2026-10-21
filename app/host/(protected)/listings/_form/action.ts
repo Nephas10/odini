@@ -206,3 +206,104 @@ export async function setListingActive(
   revalidatePath("/user")
   return { ok: true }
 }
+
+
+export async function deleteListing(
+  _prevState: ListingFormState,
+  formData: FormData
+): Promise<ListingFormState> {
+  const listingId = formData.get("listingId")
+
+  // 1. Validate the listing ID
+  if (typeof listingId !== "string" || !listingId.trim()) {
+    return {
+      error: "Invalid listing. Please try again.",
+    }
+  }
+
+  const supabase = await createClient()
+
+  // 2. Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    redirect("/auth/login?next=/host/listings")
+  }
+
+  // 3. Verify listing ownership
+  const { data: listing, error: listingError } = await supabase
+    .from("listings")
+    .select("id, title")
+    .eq("id", listingId)
+    .eq("host_id", user.id)
+    .maybeSingle()
+
+  if (listingError) {
+    console.error("deleteListing lookup failed:", listingError.message)
+    return {
+      error: "Unable to verify listing ownership.",
+    }
+  }
+
+  if (!listing) {
+    return {
+      error: "This listing doesn't exist or doesn't belong to you.",
+    }
+  }
+
+  // 4. Check whether the listing has bookings
+  const { count, error: bookingsError } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("listing_id", listingId)
+
+  if (bookingsError) {
+    console.error("deleteListing booking check failed:", bookingsError.message)
+    return {
+      error: "Unable to verify booking history. Please try again.",
+    }
+  }
+
+  if ((count ?? 0) > 0) {
+    return {
+      error: "This listing has booking history and cannot be deleted. You can unpublish it instead.",
+    }
+  }
+
+  // 5. Delete only the authenticated host's listing
+  const { data: deleted, error: deleteError } = await supabase
+    .from("listings")
+    .delete()
+    .eq("id", listingId)
+    .eq("host_id", user.id)
+    .select("id")
+    .maybeSingle()
+
+  if (deleteError) {
+    console.error("deleteListing failed:", deleteError.message)
+
+    return {
+      error: "Unable to delete the listing. Please try again.",
+    }
+  }
+
+  if (!deleted) {
+    return {
+      error: "The listing could not be deleted.",
+    }
+  }
+
+  // 6. Refresh affected pages
+  revalidatePath("/host")
+  revalidatePath("/host/listings")
+  revalidatePath("/user")
+  revalidatePath("/")
+  revalidatePath(`/listing/${listingId}`)
+  revalidatePath(`/user/listings/${listingId}`)
+
+  // 7. Return to listing management
+  redirect("/host/listings?deleted=true")
+}
