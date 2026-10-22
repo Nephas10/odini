@@ -17,9 +17,9 @@ function peopleLabel(type: string | undefined, quantity: number, guests: number 
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  confirmed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
-  pending: "bg-[#D4A64A]/15 text-[#8A6A1F]",
+  confirmed: "bg-green-400/15 text-green-300",
+  cancelled: "bg-red-400/15 text-red-300",
+  pending: "bg-amber-400/15 text-amber-300",
 }
 
 export default async function DashboardPage() {
@@ -71,15 +71,15 @@ export default async function DashboardPage() {
     profile?.firstname || profile?.username || user.email?.split("@")[0] || "there"
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-black">
       {/* Welcome band */}
-      <section className="bg-[#7A1F2B]">
+      <section className="bg-[#0f0f0f]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#F7EDEF]/80">
+          <p className="text-sm font-semibold uppercase tracking-wider text-white/80">
             Welcome back
           </p>
           <h1 className="mt-1 text-3xl font-bold text-white">Hello, {firstName} </h1>
-          <p className="mt-2 text-[#F7EDEF]/90">
+          <p className="mt-2 text-white/80">
             Manage your bookings and discover your next experience.
           </p>
         </div>
@@ -93,9 +93,9 @@ export default async function DashboardPage() {
             { label: "Confirmed", value: confirmedBookings },
             { label: "Waiting for host", value: pendingBookings },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl bg-white p-6 shadow-md">
-              <p className="text-sm text-gray-500">{stat.label}</p>
-              <p className="mt-2 text-3xl font-bold text-[#7A1F2B]">{stat.value}</p>
+            <div key={stat.label} className="rounded-2xl bg-[#0f0f0f] p-6 shadow-md ring-1 ring-inset ring-white/15">
+              <p className="text-sm text-white/70">{stat.label}</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stat.value}</p>
             </div>
           ))}
         </div>
@@ -103,22 +103,22 @@ export default async function DashboardPage() {
         {/* Host on ODINI */}
         <Link
           href={isHost ? "/host" : "/host/become"}
-          className="group mt-8 flex flex-col gap-4 rounded-2xl border border-[#D4A64A]/40 bg-gradient-to-r from-[#7A1F2B] to-[#5E1721] p-6 text-white shadow-sm transition hover:shadow-lg sm:flex-row sm:items-center"
+          className="group mt-8 flex flex-col gap-4 rounded-2xl border border-white/15 bg-[#141414] p-6 text-white shadow-sm transition hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d] sm:flex-row sm:items-center"
         >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#D4A64A]/20 text-[#D4A64A]">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e8365d]/15 text-[#e8365d]">
             <Store size={24} />
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold">
               {isHost ? "Go to your host dashboard" : "Have a place, event or activity to share?"}
             </h2>
-            <p className="mt-1 text-sm text-[#F7EDEF]/85">
+            <p className="mt-1 text-sm text-white/80">
               {isHost
                 ? "Manage your listings and the bookings coming in."
                 : "List it on ODINI and get bookings straight to your WhatsApp."}
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 self-start rounded-full bg-[#D4A64A] px-5 py-2.5 text-sm font-semibold text-[#3D0F15] transition group-hover:gap-3 sm:self-center">
+          <span className="inline-flex items-center gap-2 self-start rounded-full bg-[#e8365d] px-5 py-2.5 text-sm font-semibold text-black transition group-hover:gap-3 sm:self-center">
             {isHost ? "Open host side" : "List your place"}
             <ArrowRight size={16} />
           </span>
@@ -126,7 +126,7 @@ export default async function DashboardPage() {
 
         {/* Quick actions */}
         <div className="mt-10">
-          <h2 className="text-xl font-bold text-gray-900">Quick actions</h2>
+          <h2 className="text-xl font-bold text-white">Quick actions</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {[
               {
@@ -151,13 +151,13 @@ export default async function DashboardPage() {
               <Link
                 key={href}
                 href={href}
-                className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="group rounded-2xl bg-[#0f0f0f] p-6 shadow-sm ring-1 ring-inset ring-white/15 transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
               >
-                <Icon size={22} className="text-[#7A1F2B]" />
-                <h3 className="mt-3 text-lg font-semibold text-gray-900 group-hover:text-[#7A1F2B]">
+                <Icon size={22} className="text-[#e8365d]" />
+                <h3 className="mt-3 text-lg font-semibold text-white group-hover:text-white">
                   {title}
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">{text}</p>
+                <p className="mt-1 text-sm text-white/70">{text}</p>
               </Link>
             ))}
           </div>
@@ -167,13 +167,13 @@ export default async function DashboardPage() {
         <div className="mt-10">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Recent bookings</h2>
-              <p className="mt-1 text-sm text-gray-500">Your latest activity on ODINI.</p>
+              <h2 className="text-xl font-bold text-white">Recent bookings</h2>
+              <p className="mt-1 text-sm text-white/70">Your latest activity on ODINI.</p>
             </div>
             {totalBookings > 0 && (
               <Link
                 href="/user/bookings"
-                className="text-sm font-medium text-[#7A1F2B] hover:underline"
+                className="text-sm font-medium text-white/80 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
               >
                 View all
               </Link>
@@ -181,14 +181,14 @@ export default async function DashboardPage() {
           </div>
 
           {recentBookings.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-[#7A1F2B]/30 bg-white p-8 text-center">
-              <h3 className="font-semibold text-gray-900">No bookings yet</h3>
-              <p className="mt-2 text-sm text-gray-500">
+            <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-[#141414] p-8 text-center">
+              <h3 className="font-semibold text-white">No bookings yet</h3>
+              <p className="mt-2 text-sm text-white/70">
                 Start exploring and book your first experience.
               </p>
               <Link
                 href="/user"
-                className="mt-5 inline-block rounded-xl bg-[#7A1F2B] px-5 py-3 text-sm font-medium text-white hover:bg-[#5E1721]"
+                className="mt-5 inline-block rounded-xl bg-[#e8365d] px-5 py-3 text-sm font-medium text-black hover:bg-[#e8365d]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
               >
                 Explore listings
               </Link>
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={booking.id}
-                    className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm sm:flex-row sm:items-center"
+                    className="flex flex-col gap-4 rounded-2xl bg-[#0f0f0f] p-5 shadow-sm ring-1 ring-inset ring-white/15 sm:flex-row sm:items-center"
                   >
                     {/* Image */}
                     {listing?.image_url ? (
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
                         className="h-20 w-full rounded-xl object-cover sm:w-24"
                       />
                     ) : (
-                      <div className="flex h-20 w-full items-center justify-center rounded-xl bg-[#F7EDEF] text-xs text-[#7A1F2B]/60 sm:w-24">
+                      <div className="flex h-20 w-full items-center justify-center rounded-xl bg-[#1a1a1a] text-xs text-white/70 sm:w-24">
                         No photo
                       </div>
                     )}
@@ -220,15 +220,15 @@ export default async function DashboardPage() {
                     {/* Information */}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-[#F7EDEF] px-2.5 py-1 text-xs font-medium capitalize text-[#7A1F2B]">
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium capitalize text-white/80">
                           {type ?? "booking"}
                         </span>
-                        <span className="text-xs text-gray-400">{booking.booking_reference}</span>
+                        <span className="text-xs text-white/70">{booking.booking_reference}</span>
                       </div>
-                      <h3 className="mt-2 truncate font-semibold text-gray-900">
+                      <h3 className="mt-2 truncate font-semibold text-white">
                         {listing?.title ?? "Listing no longer available"}
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-white/70">
                         {peopleLabel(type, booking.quantity, booking.guests)}
                       </p>
                     </div>
@@ -236,7 +236,7 @@ export default async function DashboardPage() {
                     {/* Status */}
                     <span
                       className={`self-start rounded-full px-3 py-1 text-xs font-medium capitalize sm:self-center ${
-                        STATUS_STYLES[booking.status] ?? "bg-gray-100 text-gray-600"
+                        STATUS_STYLES[booking.status] ?? "bg-white/10 text-white/80"
                       }`}
                     >
                       {booking.status}
