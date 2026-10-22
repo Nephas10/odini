@@ -11,9 +11,9 @@ const NAV_LINKS = [
 ]
 
 const ICON_LINKS = [
-  { href: "/user/search", label: "Search", icon: Search },
+  // { href: "/user/search", label: "Search", icon: Search },
   { href: "/user/saved", label: "Saved listings", icon: Bookmark },
-  { href: "/user/notifications", label: "Notifications", icon: Bell },
+  // { href: "/user/notifications", label: "Notifications", icon: Bell },
 ]
 
 // Explore stays highlighted on listing and booking pages too,

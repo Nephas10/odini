@@ -3,9 +3,17 @@ import { getListings } from "./action"
 import ListingsClient from "./ListingsClient"
 import { normalizeEventSchedule } from "@/lib/explore/eventDates"
 import { unstable_rethrow } from "next/navigation"
-import LogoutButton from "@/components/auth/LogoutButton"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function UserPage() {
+  const supabase = await createClient()
+
+  // Retrieve the authenticated user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Retrieve listings
   const result = await getListings().catch((error: unknown) => {
     unstable_rethrow(error)
 
@@ -18,6 +26,28 @@ export default async function UserPage() {
     }
   })
 
+  // Retrieve saved listing IDs for the current user
+  let savedIds: string[] = []
+
+  if (user) {
+    const { data: savedListings, error: savedError } =
+      await supabase
+        .from("saved_listings")
+        .select("listing_id")
+        .eq("user_id", user.id)
+
+    if (savedError) {
+      console.error(
+        "Unable to load saved listings:",
+        savedError.message
+      )
+    } else {
+      savedIds = savedListings?.map(
+        (item) => item.listing_id
+      ) ?? []
+    }
+  }
+
   return (
     <main className="min-h-screen bg-black text-white">
 
@@ -25,23 +55,13 @@ export default async function UserPage() {
       <section className="bg-black">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
 
-          {/* Header with Logout */}
-          <div className="flex items-start justify-between gap-4">
+          <p className="text-sm font-semibold uppercase tracking-wider text-[#e8365d]">
+            Explore Zambia
+          </p>
 
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-[#e8365d]">
-                Explore Zambia
-              </p>
-
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Discover something new
-              </h1>
-            </div>
-
-            {/* Logout Button */}
-            <LogoutButton />
-
-          </div>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Discover something new
+          </h1>
 
           <p className="mt-3 max-w-2xl text-white/70">
             Find stays, events and activities around you,
@@ -58,8 +78,11 @@ export default async function UserPage() {
           <ListingsClient
             listings={(result.listings ?? []).map((listing) => ({
               ...listing,
-              eventSchedule: normalizeEventSchedule(listing.events),
+              eventSchedule: normalizeEventSchedule(
+                listing.events
+              ),
             }))}
+            savedIds={savedIds}
           />
         ) : (
           <section
@@ -78,7 +101,6 @@ export default async function UserPage() {
         )}
 
       </div>
-
     </main>
   )
 }
