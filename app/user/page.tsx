@@ -4,6 +4,7 @@ import ListingsClient from "./ListingsClient"
 import { normalizeEventSchedule } from "@/lib/explore/eventDates"
 import { unstable_rethrow } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import LogoutButton from "@/components/auth/LogoutButton"
 
 export default async function UserPage() {
   const supabase = await createClient()
@@ -67,7 +68,7 @@ export default async function UserPage() {
             Find stays, events and activities around you,
             and book in a few taps.
           </p>
-
+          <LogoutButton />
         </div>
       </section>
 

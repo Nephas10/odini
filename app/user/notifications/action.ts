@@ -68,7 +68,7 @@ export async function markNotificationAsRead(
 
   // 4. Revalidate the notifications page
   revalidatePath("/user/notifications")
-
+  revalidatePath("/host/notifications")
   return {
     success: true,
   }
