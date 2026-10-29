@@ -1,26 +1,31 @@
 
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import {
+  ArrowRight,
+  Compass,
+  Sparkles,
+  ShieldCheck,
+} from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
 
 import LandingNavbar from "@/components/landing/LandingNavbar"
 import LandingHero from "@/components/landing/LandingHero"
+import LandingCategories from "@/components/landing/LandingCategories"
 import ListingPreviewCard from "@/components/landing/ListingPreviewCard"
 import LandingFooter from "@/components/landing/LandingFooter"
 
 export default async function Home() {
   const supabase = await createClient()
 
-  // Check authentication only to personalize the navigation.
-  // Visitors do not need to log in to explore listings.
+  // Personalize navigation without restricting public access
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const isLoggedIn = !!user
 
-  // Load the latest published listings
+  // Fetch the latest six published listings
   const { data: listings, error } = await supabase
     .from("listings")
     .select(
@@ -31,7 +36,7 @@ export default async function Home() {
     .limit(6)
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-[#F8F5F3]">
 
       {/* Navbar */}
       <LandingNavbar isLoggedIn={isLoggedIn} />
@@ -39,59 +44,83 @@ export default async function Home() {
       {/* Hero */}
       <LandingHero isLoggedIn={isLoggedIn} />
 
-      {/* Featured Listings */}
+      {/* Explore by category */}
+      <LandingCategories />
+
+      {/* Featured experiences */}
       <section
         id="explore"
-        className="scroll-mt-8 px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
+        className="relative scroll-mt-28 overflow-hidden border-t border-[#7A1F2B]/5 bg-[#EEE9E7] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
       >
-        <div className="mx-auto max-w-7xl">
 
-          {/* Section Header */}
-          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        {/* Subtle background decoration */}
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#e8365d]/5 blur-3xl" />
 
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wider text-[#7A1F2B]">
-                Explore Odini
-              </p>
+        <div className="relative mx-auto max-w-7xl">
 
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                Experiences worth discovering
+          {/* Section heading */}
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+
+            <div className="max-w-2xl">
+
+              {/* Eyebrow */}
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#7A1F2B]/10 bg-white/70 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#7A1F2B]">
+                <Sparkles size={14} />
+                Featured on Odini
+              </span>
+
+              {/* Title */}
+              <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight text-[#20191C] sm:text-4xl lg:text-5xl">
+                Experiences worth{" "}
+                <span className="text-[#7A1F2B]">
+                  discovering.
+                </span>
               </h2>
 
-              <p className="mt-3 max-w-2xl text-gray-500">
-                Find memorable stays, exciting events and
-                activities offered by local hosts across Zambia.
-                Explore freely, no account required.
+              {/* Description */}
+              <p className="mt-5 max-w-xl text-sm leading-7 text-[#71666A] sm:text-base">
+                Discover memorable stays, exciting events
+                and activities offered by local hosts
+                across Zambia.
               </p>
+
             </div>
 
-            {/* Public Explore link */}
+            {/* Explore all link */}
             <Link
               href="/explore"
-              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[#7A1F2B] transition hover:gap-3 hover:text-[#5E1721]"
+              className="group inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-[#7A1F2B]/20 bg-white px-5 py-3 text-sm font-bold text-[#7A1F2B] transition hover:border-[#7A1F2B] hover:bg-[#7A1F2B] hover:text-white"
             >
               Explore all
-              <ArrowRight size={17} />
+
+              <ArrowRight
+                size={17}
+                className="transition-transform group-hover:translate-x-1"
+              />
             </Link>
 
           </div>
 
-          {/* Listings Grid */}
+          {/* Featured listings grid */}
           {error ? (
-            <div className="mt-8 rounded-2xl border border-red-100 bg-white p-10 text-center">
 
-              <h3 className="font-semibold text-gray-900">
+            /* Error state */
+            <div
+              role="alert"
+              className="mt-10 rounded-2xl border border-red-200 bg-white p-10 text-center shadow-sm"
+            >
+              <h3 className="font-bold text-[#20191C]">
                 Unable to load experiences
               </h3>
 
               <p className="mt-2 text-sm text-gray-500">
-                Please try again later.
+                Please refresh the page and try again.
               </p>
-
             </div>
+
           ) : listings && listings.length > 0 ? (
 
-            <div className="mt-9 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {listings.map((listing) => (
                 <ListingPreviewCard
                   key={listing.id}
@@ -102,87 +131,143 @@ export default async function Home() {
 
           ) : (
 
-            <div className="mt-8 rounded-2xl border border-gray-100 bg-white p-12 text-center">
+            /* Empty state */
+            <div className="mt-10 rounded-3xl border border-[#7A1F2B]/10 bg-white/80 px-6 py-14 text-center shadow-sm">
 
-              <h3 className="text-lg font-semibold text-gray-900">
-                Experiences are coming soon
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#7A1F2B]/10">
+                <Compass
+                  size={28}
+                  className="text-[#7A1F2B]"
+                />
+              </div>
+
+              <h3 className="mt-5 text-xl font-bold text-[#20191C]">
+                Something exciting is coming.
               </h3>
 
-              <p className="mt-2 text-sm text-gray-500">
-                We're preparing exciting experiences for
-                you to discover.
+              <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-gray-500">
+                We're preparing new stays, events and
+                activities for you to discover on Odini.
               </p>
 
             </div>
 
           )}
 
-          {/* View all experiences */}
+          {/* View all listings */}
           {!error && listings && listings.length > 0 && (
-            <div className="mt-10 text-center">
+
+            <div className="mt-12 flex flex-col items-center gap-4 text-center">
 
               <Link
                 href="/explore"
-                className="inline-flex items-center gap-2 rounded-full border border-[#7A1F2B] px-7 py-3 text-sm font-bold text-[#7A1F2B] transition hover:bg-[#7A1F2B] hover:text-white"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#7A1F2B] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#7A1F2B]/10 transition duration-300 hover:-translate-y-0.5 hover:bg-[#e8365d]"
               >
                 View all experiences
-                <ArrowRight size={17} />
+
+                <ArrowRight
+                  size={18}
+                  className="transition-transform group-hover:translate-x-1"
+                />
               </Link>
 
+              <p className="text-xs text-[#71666A]">
+                Explore stays, events and activities
+                without creating an account.
+              </p>
+
             </div>
+
           )}
 
         </div>
       </section>
 
-      {/* Call To Action */}
-      <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+      {/* Final discovery CTA */}
+      <section className="relative overflow-hidden bg-[#121012] px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
 
-          <div className="overflow-hidden rounded-3xl bg-[#7A1F2B] px-6 py-14 text-center sm:px-10 sm:py-20">
+        {/* Background glow */}
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#7A1F2B]/20 blur-[100px]" />
 
-            <p className="text-sm font-semibold uppercase tracking-widest text-white/70">
-              Your next experience awaits
-            </p>
+        <div className="relative mx-auto max-w-7xl">
 
-            <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to discover something new?
-            </h2>
+          <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-[#7A1F2B] via-[#5A1927] to-[#28141C] px-6 py-14 text-center shadow-2xl shadow-black/20 sm:px-10 sm:py-20">
 
-            <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/80 sm:text-base">
-              Explore exciting experiences, discover new
-              places and connect with hosts across Zambia.
-              Browse before you book.
-            </p>
+            {/* Decorative circles */}
+            <div className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-white/10 bg-white/5" />
 
-            {/* Primary CTA: public discovery */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="pointer-events-none absolute -bottom-40 -left-20 h-80 w-80 rounded-full border border-white/10 bg-white/5" />
 
-              <Link
-                href="/explore"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#7A1F2B] transition hover:bg-gray-100"
-              >
-                Explore experiences
-                <ArrowRight size={17} />
-              </Link>
+            <div className="relative mx-auto max-w-3xl">
 
-              {/* Secondary CTA: registration */}
-              {!isLoggedIn && (
+              {/* Section tag */}
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#FFD5DE]">
+                <Sparkles size={15} />
+                Your next experience awaits
+              </span>
+
+              {/* CTA heading */}
+              <h2 className="mt-7 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Your next great experience{" "}
+                <span className="text-[#FF9AAF]">
+                  starts here.
+                </span>
+              </h2>
+
+              {/* Description */}
+              <p className="mx-auto mt-6 max-w-xl text-sm leading-8 text-white/75 sm:text-base">
+                Explore exciting events, discover new
+                places and connect with experiences
+                across Zambia. Find what interests you
+                and book when you're ready.
+              </p>
+
+              {/* CTA buttons */}
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+
                 <Link
-                  href="/auth/signup"
-                  className="inline-flex items-center rounded-full border border-white/40 px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  href="/explore"
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#7A1F2B] transition duration-300 hover:-translate-y-0.5 hover:bg-[#FFE6EC]"
                 >
-                  Create an account
+                  Explore experiences
+
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </Link>
-              )}
+
+                {!isLoggedIn ? (
+                  <Link
+                    href="/auth/signup"
+                    className="inline-flex items-center justify-center rounded-full border border-white/35 px-8 py-3.5 text-sm font-semibold text-white transition hover:border-white/70 hover:bg-white/10"
+                  >
+                    Create an account
+                  </Link>
+                ) : (
+                  <Link
+                    href="/user"
+                    className="inline-flex items-center justify-center rounded-full border border-white/35 px-8 py-3.5 text-sm font-semibold text-white transition hover:border-white/70 hover:bg-white/10"
+                  >
+                    My dashboard
+                  </Link>
+                )}
+
+              </div>
+
+              {/* Trust message */}
+              <div className="mt-8 flex items-center justify-center gap-2 text-xs text-white/65">
+                <ShieldCheck
+                  size={17}
+                  className="text-[#FF9AAF]"
+                />
+
+                <span>
+                  Browse freely. Sign in when you're ready to book.
+                </span>
+              </div>
 
             </div>
-
-            <p className="mt-5 text-xs text-white/60">
-              No account needed to browse. Sign in when
-              you're ready to book.
-            </p>
-
           </div>
 
         </div>

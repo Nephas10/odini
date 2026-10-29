@@ -28,6 +28,7 @@ type Props = {
   hasError?: boolean
   isLoggedIn: boolean
   hasMoreListings: boolean
+  initialCategory?: string
 }
 
 const CATEGORIES = [
@@ -51,9 +52,10 @@ export default function PublicExploreClient({
   hasError = false,
   isLoggedIn,
   hasMoreListings,
+  initialCategory = "all",
 }: Props) {
   const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("all")
+  const [category, setCategory] = useState(initialCategory)
   const [location, setLocation] = useState("all")
 
   // Build location options from actual listings.
@@ -309,7 +311,7 @@ export default function PublicExploreClient({
           /* Listing cards */
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
-            {filteredListings.map((listing) => (
+             {filteredListings.map((listing) => (
               <Link
                 key={listing.id}
                 href={`/listing/${listing.id}`}

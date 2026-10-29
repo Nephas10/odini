@@ -4,9 +4,29 @@ import PublicExploreClient from "./PublicExploreClient"
 
 const GUEST_LISTING_LIMIT = 7
 
-export default async function PublicExplorePage() {
-  const supabase = await createClient()
+type Props = {
+  searchParams: Promise<{ category?: string }>
+}
 
+export default async function PublicExplorePage({
+    searchParams,
+}: Props) {
+  const supabase = await createClient()
+  
+  const {category} = await searchParams
+
+  const validCategories = [
+    "all",
+    "stay",
+    "event",
+    "activity",
+    "service",
+  ]
+
+  const initialCategory =
+    category && validCategories.includes(category)
+      ? category
+      : "all"
   // Check whether the visitor is logged in
   const {
     data: { user },
@@ -55,11 +75,14 @@ export default async function PublicExplorePage() {
     : listings.slice(0, GUEST_LISTING_LIMIT)
 
   return (
-    <PublicExploreClient
-      listings={visibleListings}
-      hasError={Boolean(error)}
-      isLoggedIn={isLoggedIn}
-      hasMoreListings={hasMoreListings}
-    />
+
+  <PublicExploreClient
+    listings={visibleListings}
+    hasError={Boolean(error)}
+    isLoggedIn={isLoggedIn}
+    hasMoreListings={hasMoreListings}
+    initialCategory={initialCategory}
+  />
+
   )
 }
