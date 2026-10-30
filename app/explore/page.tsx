@@ -5,36 +5,43 @@ import PublicExploreClient from "./PublicExploreClient"
 const GUEST_LISTING_LIMIT = 7
 
 type Props = {
-  searchParams: Promise<{ category?: string }>
+  searchParams: Promise<{
+    category?: string
+  }>
 }
 
+const VALID_CATEGORIES = [
+  "all",
+  "stay",
+  "event",
+  "activity",
+  "service",
+]
+
 export default async function PublicExplorePage({
-    searchParams,
+  searchParams,
 }: Props) {
   const supabase = await createClient()
-  
-  const {category} = await searchParams
 
-  const validCategories = [
-    "all",
-    "stay",
-    "event",
-    "activity",
-    "service",
-  ]
+  // Read the category supplied by the landing page
+  const { category } = await searchParams
 
   const initialCategory =
-    category && validCategories.includes(category)
+    category && VALID_CATEGORIES.includes(category)
       ? category
       : "all"
-  // Check whether the visitor is logged in
+
+  // Authentication determines how many listings
+  // the visitor can browse.
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const isLoggedIn = !!user
 
-  // Only retrieve published listings
+  // Only published listings are discoverable.
+  // Match the ordering used by the homepage and
+  // public listing details page.
   let query = supabase
     .from("listings")
     .select(`
@@ -48,9 +55,11 @@ export default async function PublicExplorePage({
     `)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
 
-  // Guests receive only 7 listings.
-  // Fetch one extra to check whether more exist.
+  // Guests can see only seven listings.
+  // Fetch one extra to know whether to show
+  // the invitation to explore more.
   if (!isLoggedIn) {
     query = query.limit(GUEST_LISTING_LIMIT + 1)
   }
@@ -75,14 +84,13 @@ export default async function PublicExplorePage({
     : listings.slice(0, GUEST_LISTING_LIMIT)
 
   return (
-
-  <PublicExploreClient
-    listings={visibleListings}
-    hasError={Boolean(error)}
-    isLoggedIn={isLoggedIn}
-    hasMoreListings={hasMoreListings}
-    initialCategory={initialCategory}
-  />
-
+    <PublicExploreClient
+      key={initialCategory}
+      listings={visibleListings}
+      hasError={Boolean(error)}
+      isLoggedIn={isLoggedIn}
+      hasMoreListings={hasMoreListings}
+      initialCategory={initialCategory}
+    />
   )
 }
