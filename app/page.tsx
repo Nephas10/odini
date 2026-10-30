@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server"
 
 import LandingNavbar from "@/components/landing/LandingNavbar"
 import LandingHero from "@/components/landing/LandingHero"
-import LandingCategories from "@/components/landing/LandingCategories"
+
 import ListingPreviewCard from "@/components/landing/ListingPreviewCard"
 import LandingFooter from "@/components/landing/LandingFooter"
 
@@ -43,9 +43,6 @@ export default async function Home() {
 
       {/* Hero */}
       <LandingHero isLoggedIn={isLoggedIn} />
-
-      {/* Explore by category */}
-      <LandingCategories />
 
       {/* Featured experiences */}
       <section
