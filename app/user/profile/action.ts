@@ -2,6 +2,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import {revalidatePath} from "next/cache"
+
 
 type AvatarResult = {
   success: boolean
@@ -75,4 +77,96 @@ export async function saveProfileAvatarAction(
   }
 
   return { success: true }
+}
+
+
+type UpdateProfileData = {
+  name: string
+  phone: string
+}
+
+export async function updateProfileAction(
+  data: UpdateProfileData
+) {
+  const name = data.name?.trim() ?? ""
+  const phone = data.phone?.trim() ?? ""
+
+  // Validate the full name
+  if (name.length < 2 || name.length > 100) {
+    return {
+      success: false,
+      error: "Name must be between 2 and 100 characters.",
+    }
+  }
+
+  // Normalize spaces, brackets and hyphens
+  const normalizedPhone = phone.replace(/[\s()-]/g, "")
+
+  // Accept international format (+260...)
+  // or a 10-digit local phone number (097...)
+  const validPhone =
+    /^\+[1-9]\d{7,14}$/.test(normalizedPhone) ||
+    /^0\d{9}$/.test(normalizedPhone)
+
+  if (!validPhone) {
+    return {
+      success: false,
+      error:
+        "Please enter a valid phone number, e.g. +260971234567.",
+    }
+  }
+
+  const supabase = await createClient()
+
+  // Always identify the account on the server.
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return {
+      success: false,
+      error: "Your session has expired. Please log in again.",
+    }
+  }
+
+  // Only update the authenticated user's profile
+  const { data: updatedProfile, error } = await supabase
+    .from("profiles")
+    .update({
+      firstname: name,
+      phone_number: normalizedPhone,
+    })
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle()
+
+  if (error) {
+    console.error(
+      "Profile update failed:",
+      error.message
+    )
+
+    return {
+      success: false,
+      error: "Unable to update your profile. Please try again.",
+    }
+  }
+
+  if (!updatedProfile) {
+    return {
+      success: false,
+      error: "Your profile record could not be found.",
+    }
+  }
+
+  // Refresh the server-rendered profile information
+  revalidatePath("/user/profile")
+
+  return {
+    success: true,
+    name,
+    phone: normalizedPhone,
+  }
 }

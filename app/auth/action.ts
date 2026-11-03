@@ -44,6 +44,13 @@ export async function signupAction(data: SignupData) {
   if (!authData.user) {
     return { success: false, error: "Unable to create user." }
   }
+  if(!authData.session){
+    return {
+      success: false,
+      error: 
+          "Your Account was created, but no active session is available. Please log in to continue."
+    }
+  }
 
   // Create profile
   const { error: profileError } = await supabase.from("profiles").upsert({

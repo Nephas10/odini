@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import EditProfileForm from "@/components/profile/EditProfileForm"
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -214,7 +215,13 @@ export default async function ProfilePage() {
 
             </div>
 
-            {/* Profile management notice */}
+            {/* Edit profile */}
+            <EditProfileForm
+              initialName={displayName}
+              initialPhone={
+                profile?.phone_number?.trim() ?? ""
+              }
+            />
             <div className="mt-7 rounded-xl border border-[#e8365d]/15 bg-[#e8365d]/5 px-5 py-4">
               <p className="text-sm leading-6 text-white/55">
                 Your profile information is linked to

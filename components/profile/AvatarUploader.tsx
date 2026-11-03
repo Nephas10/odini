@@ -136,6 +136,10 @@ export default function AvatarUploader({
       setAvatarPath(path)
       setSuccess("Profile picture updated successfully.")
 
+      // Tell the navbar to reload the profile picture.
+      window.dispatchEvent(
+        new Event("odini:avatar-updated")
+      )
       // Remove the old image after the new one is saved.
       if (previousPath && previousPath !== path) {
         const { error: cleanupError } =
