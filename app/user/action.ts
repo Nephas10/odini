@@ -64,6 +64,7 @@ export async function getListingById(id: string) {
       price,
       location,
       image_url,
+      photos,
       is_active,
       created_at,
 
