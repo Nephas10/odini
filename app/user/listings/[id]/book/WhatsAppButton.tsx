@@ -9,7 +9,7 @@ type Props = {
 export default function WhatsAppButton({ url }: Props) {
   if (!url) {
     return (
-      <p className="mx-auto mt-6 max-w-sm text-sm text-gray-500">
+      <p className="mx-auto mt-6 max-w-sm text-sm text-white/50">
         The host will contact you to confirm. You can track this booking with your reference.
       </p>
     )
@@ -26,7 +26,7 @@ export default function WhatsAppButton({ url }: Props) {
         <MessageCircle size={20} />
         Message host on WhatsApp
       </a>
-      <p className="mx-auto mt-3 max-w-sm text-xs text-gray-500">
+      <p className="mx-auto mt-3 max-w-sm text-xs text-white/50">
         Send the message so the host can confirm your booking.
       </p>
     </div>

@@ -101,7 +101,11 @@ export default function NotificationBell({
       aria-label={`Notifications, ${unreadCount} unread`}
       title="Notifications"
       aria-current={isActive ? "page" : undefined}
-      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4A64A] ${
+      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 ${
+        isHost
+          ? "focus-visible:outline-[#D4A64A]"
+          : "focus-visible:outline-[#e8365d]"
+      } ${
         isHost
           ? isActive
             ? "bg-white/15 text-[#D4A64A]"

@@ -48,13 +48,13 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
   if (state.reference) {
     return (
       <div className="py-6 text-center">
-        <CheckCircle2 size={48} className="mx-auto text-[#7A1F2B]" />
-        <h2 className="mt-4 text-xl font-bold text-gray-900">Booking request sent</h2>
-        <p className="mt-2 text-sm text-gray-500">Your booking reference is</p>
-        <p className="mt-1 text-2xl font-bold tracking-wider text-[#7A1F2B]">
+        <CheckCircle2 size={48} className="mx-auto text-[#FF8CA5]" />
+        <h2 className="mt-4 text-xl font-bold text-white">Booking request sent</h2>
+        <p className="mt-2 text-sm text-white/50">Your booking reference is</p>
+        <p className="mt-1 text-2xl font-bold tracking-wider text-[#FF8CA5]">
           {state.reference}
         </p>
-        <p className="mx-auto mt-4 max-w-sm text-sm text-gray-500">
+        <p className="mx-auto mt-4 max-w-sm text-sm text-white/50">
           The host will confirm your booking on WhatsApp. Keep this reference handy.
         </p>
         <WhatsAppButton url={state.whatsappUrl} />
@@ -68,10 +68,10 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
 
       {/* Dates */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Your dates</h2>
+        <h2 className="text-lg font-semibold text-white">Your dates</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Check-in</span>
+            <span className="text-sm font-medium text-white/70">Check-in</span>
             <input
               type="date"
               name="check_in"
@@ -83,12 +83,12 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
                 // Clear check-out if it's no longer after check-in
                 if (checkOut && e.target.value >= checkOut) setCheckOut("")
               }}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+              className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Check-out</span>
+            <span className="text-sm font-medium text-white/70">Check-out</span>
             <input
               type="date"
               name="check_out"
@@ -96,7 +96,7 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
               min={checkIn || today}
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+              className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
             />
           </label>
         </div>
@@ -104,7 +104,7 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
 
       {/* Guests */}
       <label className="block">
-        <span className="text-sm font-medium text-gray-700">Guests</span>
+        <span className="text-sm font-medium text-white/70">Guests</span>
         <input
           type="number"
           name="guests"
@@ -113,35 +113,35 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
           max={maxGuests ?? undefined}
           value={guests}
           onChange={(e) => setGuests(Number(e.target.value))}
-          className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
         />
         {maxGuests !== null && (
-          <span className="mt-1 block text-xs text-gray-500">Maximum {maxGuests} guests</span>
+          <span className="mt-1 block text-xs text-white/50">Maximum {maxGuests} guests</span>
         )}
       </label>
 
       {/* Contact */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Your details</h2>
+        <h2 className="text-lg font-semibold text-white">Your details</h2>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Full name</span>
+            <span className="text-sm font-medium text-white/70">Full name</span>
             <input
               type="text"
               name="customer_name"
               required
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+              className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">WhatsApp number</span>
+            <span className="text-sm font-medium text-white/70">WhatsApp number</span>
             <input
               type="tel"
               name="customer_phone"
               required
               placeholder="+260 97 123 4567"
-              className="mt-1 w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+              className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
             />
           </label>
         </div>
@@ -149,11 +149,11 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
 
       {/* Payment preference */}
       <label className="block">
-        <span className="text-sm font-medium text-gray-700">How would you like to pay?</span>
+        <span className="text-sm font-medium text-white/70">How would you like to pay?</span>
         <select
           name="payment_method"
           defaultValue="mobile_money"
-          className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 focus:border-[#7A1F2B] focus:outline-none focus:ring-2 focus:ring-[#7A1F2B]/20 text-gray-900"
+          className="mt-1 w-full rounded-xl border border-white/15 bg-[#242024] px-4 py-3 text-white [color-scheme:dark] placeholder:text-white/30 focus:border-[#e8365d] focus:outline-none focus:ring-2 focus:ring-[#e8365d]/15"
         >
           <option value="mobile_money">Mobile money</option>
           <option value="card">Card</option>
@@ -161,28 +161,28 @@ export default function StayBookingForm({ listingId, price, maxGuests, action }:
       </label>
 
       {/* Total */}
-      <div className="rounded-xl bg-[#F7EDEF] p-4">
-        <div className="flex items-center justify-between text-sm text-gray-700">
+      <div className="rounded-xl border border-white/10 bg-[#242024] p-4">
+        <div className="flex items-center justify-between text-sm text-white/70">
           <span>
             {price !== null ? `K${price.toLocaleString("en-ZM")}` : "—"} × {nights}{" "}
             {nights === 1 ? "night" : "nights"}
           </span>
-          <span className="text-lg font-bold text-[#7A1F2B]">
+          <span className="text-lg font-bold text-[#FF8CA5]">
             {total !== null ? `K${total.toLocaleString("en-ZM")}` : "Price on request"}
           </span>
         </div>
-        <p className="mt-1 text-xs text-gray-500">You won't be charged now.</p>
+        <p className="mt-1 text-xs text-white/50">You won't be charged now.</p>
       </div>
 
       {/* Error from the server */}
       {state.error && (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>
+        <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{state.error}</p>
       )}
 
       <button
         type="submit"
         disabled={isPending || nights === 0}
-        className="w-full rounded-xl bg-[#7A1F2B] px-5 py-3 font-medium text-white transition hover:bg-[#5E1721] disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-xl bg-[#e8365d] px-5 py-3 font-medium text-white transition hover:bg-[#d02d50] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending ? "Sending request..." : "Request booking"}
       </button>

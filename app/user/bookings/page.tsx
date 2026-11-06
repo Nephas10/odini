@@ -57,9 +57,9 @@ type Props = {
 
 // Status styling
 const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-[#D4A64A]/15 text-[#8A6A1F]",
-  confirmed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  pending: "bg-[#D4A64A]/15 text-[#E8BD70]",
+  confirmed: "bg-green-500/15 text-green-400",
+  cancelled: "bg-red-500/15 text-red-400",
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -183,13 +183,13 @@ function BookingCard({
     booking.payment_status === "paid"
 
   return (
-    <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5">
+    <article className="rounded-2xl border border-white/10 bg-[#1C1A1D] p-4 shadow-sm sm:p-5">
 
       {/* Listing information */}
       <div className="flex gap-4">
 
         {/* Listing image */}
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F7EDEF] sm:h-24 sm:w-32">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#242024] sm:h-24 sm:w-32">
 
           {listing?.image_url ? (
             <img
@@ -198,7 +198,7 @@ function BookingCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-[10px] text-[#7A1F2B]/60">
+            <div className="flex h-full items-center justify-center text-[10px] text-white/40">
               No photo
             </div>
           )}
@@ -213,7 +213,7 @@ function BookingCard({
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 STATUS_STYLES[booking.status] ??
-                "bg-gray-100 text-gray-600"
+                "bg-white/10 text-white/60"
               }`}
             >
               {STATUS_LABEL[booking.status] ??
@@ -224,8 +224,8 @@ function BookingCard({
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                   isPaid
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-green-500/15 text-green-400"
+                    : "bg-white/10 text-white/60"
                 }`}
               >
                 {isPaid
@@ -237,17 +237,17 @@ function BookingCard({
           </div>
 
           {/* Listing title */}
-          <h2 className="mt-1.5 line-clamp-2 text-base font-semibold leading-snug text-gray-900">
+          <h2 className="mt-1.5 line-clamp-2 text-base font-semibold leading-snug text-white">
             {listing?.title ??
               "Listing no longer available"}
           </h2>
 
           {/* Location */}
           {listing?.location && (
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-white/50">
               <MapPin
                 size={12}
-                className="shrink-0 text-[#7A1F2B]"
+                className="shrink-0 text-[#FF8CA5]"
               />
 
               <span className="truncate">
@@ -260,19 +260,19 @@ function BookingCard({
       </div>
 
       {/* Booking details */}
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-[#F7EDEF]/60 p-3 text-sm">
+      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-[#242024] p-3 text-sm">
 
         {/* Date */}
         <div className="col-span-2 flex items-start gap-2 sm:col-span-1">
           <CalendarDays
             size={16}
-            className="mt-0.5 shrink-0 text-[#7A1F2B]"
+            className="mt-0.5 shrink-0 text-[#FF8CA5]"
           />
 
           <div>
             <dt className="sr-only">When</dt>
 
-            <dd className="font-medium text-gray-900">
+            <dd className="font-medium text-white">
               {when}
             </dd>
           </div>
@@ -282,7 +282,7 @@ function BookingCard({
         <div className="col-span-2 flex items-start gap-2 sm:col-span-1">
           <Users
             size={16}
-            className="mt-0.5 shrink-0 text-[#7A1F2B]"
+            className="mt-0.5 shrink-0 text-[#FF8CA5]"
           />
 
           <div>
@@ -290,7 +290,7 @@ function BookingCard({
               Booked for
             </dt>
 
-            <dd className="font-medium text-gray-900">
+            <dd className="font-medium text-white">
               {who}
             </dd>
           </div>
@@ -298,25 +298,25 @@ function BookingCard({
 
         {/* Booking reference */}
         <div className="min-w-0">
-          <dt className="text-xs text-gray-500">
+          <dt className="text-xs text-white/50">
             Reference
           </dt>
 
-          <dd className="break-all font-mono text-sm font-semibold text-gray-900">
+          <dd className="break-all font-mono text-sm font-semibold text-white">
             {booking.booking_reference ?? "-"}
           </dd>
         </div>
 
         {/* Total price */}
         <div className="text-right">
-          <dt className="text-xs text-gray-500">
+          <dt className="text-xs text-white/50">
             Total ·{" "}
             {booking.payment_method === "card"
               ? "card"
               : "mobile money"}
           </dt>
 
-          <dd className="text-base font-bold text-[#7A1F2B]">
+          <dd className="text-base font-bold text-[#FF8CA5]">
             {total !== null
               ? `K${total.toLocaleString("en-ZM")}`
               : "On request"}
@@ -329,7 +329,7 @@ function BookingCard({
       {listing?.id && (
         <Link
           href={`/user/listings/${listing.id}`}
-          className="mt-3 block rounded-xl border border-[#7A1F2B]/20 py-2.5 text-center text-sm font-semibold text-[#7A1F2B] transition hover:bg-[#F7EDEF]"
+          className="mt-3 block rounded-xl border border-white/15 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
         >
           View listing
         </Link>
@@ -456,17 +456,21 @@ export default async function MyBookingsPage({
   )
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-[#121012] text-white">
 
       {/* Page header */}
-      <section className="bg-[#7A1F2B]">
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <section>
+        <div className="mx-auto max-w-3xl px-4 pt-10 sm:px-6 sm:pt-14">
 
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          <span className="inline-flex items-center rounded-full border border-[#e8365d]/20 bg-[#e8365d]/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#FF8CA5]">
+            My account
+          </span>
+
+          <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
             My bookings
           </h1>
 
-          <p className="mt-1 text-sm text-[#F7EDEF]/90 sm:text-base">
+          <p className="mt-3 text-sm leading-7 text-white/50 sm:text-base">
             Your stays, events and activities
             in one place.
           </p>
@@ -495,8 +499,8 @@ export default async function MyBookingsPage({
                 }
                 className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
                   active
-                    ? "bg-[#7A1F2B] text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:border-[#7A1F2B] hover:text-[#7A1F2B]"
+                    ? "bg-[#e8365d] text-white"
+                    : "border border-white/10 bg-[#1C1A1D] text-white/60 hover:border-[#e8365d] hover:text-white"
                 }`}
               >
                 {t.label}
@@ -506,7 +510,7 @@ export default async function MyBookingsPage({
                   className={`rounded-full px-2 py-0.5 text-xs ${
                     active
                       ? "bg-white/20 text-white"
-                      : "bg-gray-100 text-gray-600"
+                      : "bg-white/10 text-white/60"
                   }`}
                 >
                   {counts[t.value]}
@@ -521,7 +525,7 @@ export default async function MyBookingsPage({
         {error ? (
           <div
             role="alert"
-            className="rounded-2xl bg-white p-8 text-center text-sm text-red-600 shadow-sm"
+            className="rounded-2xl border border-white/10 bg-[#1C1A1D] p-8 text-center text-sm text-red-400 shadow-sm"
           >
             Unable to load your bookings.
             Please refresh the page and try again.
@@ -529,20 +533,20 @@ export default async function MyBookingsPage({
         ) : filteredBookings.length === 0 ? (
 
           /* Empty state */
-          <div className="rounded-2xl border border-dashed border-[#7A1F2B]/30 bg-white p-8 text-center">
+          <div className="rounded-2xl border border-dashed border-white/15 bg-[#1C1A1D] p-8 text-center">
 
             <CalendarDays
               size={36}
-              className="mx-auto text-[#7A1F2B]/50"
+              className="mx-auto text-[#FF8CA5]/50"
             />
 
-            <h2 className="mt-4 text-lg font-semibold text-gray-900">
+            <h2 className="mt-4 text-lg font-semibold text-white">
               {tab === "all"
                 ? "No bookings yet"
                 : `No ${tab} bookings`}
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-white/50">
               {tab === "all"
                 ? "Your bookings will appear here once you make one."
                 : "You don't have any bookings with this status."}
@@ -554,7 +558,7 @@ export default async function MyBookingsPage({
                   ? "/user"
                   : "/user/bookings"
               }
-              className="mt-5 inline-block rounded-full bg-[#7A1F2B] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#5E1721]"
+              className="mt-5 inline-block rounded-full bg-[#e8365d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#d02d50]"
             >
               {tab === "all"
                 ? "Explore listings"
@@ -586,17 +590,17 @@ export default async function MyBookingsPage({
 
             {/* Upcoming bookings */}
             <section>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">
                 Upcoming ({upcoming.length})
               </h2>
 
               {upcoming.length === 0 ? (
-                <p className="mt-3 rounded-2xl bg-white p-5 text-sm text-gray-500 shadow-sm">
+                <p className="mt-3 rounded-2xl border border-white/10 bg-[#1C1A1D] p-5 text-sm text-white/50 shadow-sm">
                   Nothing coming up.{" "}
 
                   <Link
                     href="/user"
-                    className="font-semibold text-[#7A1F2B] hover:underline"
+                    className="font-semibold text-[#FF8CA5] hover:underline"
                   >
                     Find something to do
                   </Link>
@@ -621,7 +625,7 @@ export default async function MyBookingsPage({
             {past.length > 0 && (
               <section>
 
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">
                   Past and cancelled ({past.length})
                 </h2>
 
