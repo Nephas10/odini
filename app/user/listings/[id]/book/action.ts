@@ -340,3 +340,306 @@ export async function createActivityBooking(
 
   return { error: "We couldn't save your booking. Please try again." }
 }
+
+
+export async function getStayRoomAvailability(
+  listingId: string,
+  checkIn: string,
+  checkOut: string
+): Promise<{
+  ok: boolean
+  rooms: { id: string; available: number }[]
+  error?: string
+}> {
+  if (
+    !listingId ||
+    !isValidDate(checkIn) ||
+    !isValidDate(checkOut) ||
+    checkOut <= checkIn
+  ) {
+    return {
+      ok: false,
+      rooms: [],
+      error: "Please select valid dates.",
+    }
+  }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc(
+    "get_stay_room_availability",
+    {
+      p_listing_id: listingId,
+      p_check_in: checkIn,
+      p_check_out: checkOut,
+    }
+  )
+
+  if (error) {
+    console.error("getStayRoomAvailability:", error.message)
+
+    return {
+      ok: false,
+      rooms: [],
+      error: "Unable to check availability for these dates.",
+    }
+  }
+
+  return {
+    ok: true,
+    rooms: (data ?? []).map((room: { room_type_id: any; rooms_available: any }) => ({
+      id: room.room_type_id,
+      available: room.rooms_available,
+    })),
+  }
+}
+
+// Creates a pending booking for a specific room category.
+// Only host confirmation will reserve inventory.
+export async function createStayRoomBooking(
+  _prevState: BookingState,
+  formData: FormData
+): Promise<BookingState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: "Please log in to book a room." }
+  }
+
+  const listingId = String(formData.get("listing_id") ?? "")
+  const roomTypeId = String(
+    formData.get("stay_room_type_id") ?? ""
+  )
+
+  const checkIn = String(formData.get("check_in") ?? "")
+  const checkOut = String(formData.get("check_out") ?? "")
+
+  const rawRooms = String(formData.get("rooms_booked") ?? "")
+  const rawGuests = String(formData.get("guests") ?? "")
+
+  const roomsBooked = Number(rawRooms)
+  const guests = Number(rawGuests)
+
+  const customerName = String(
+    formData.get("customer_name") ?? ""
+  ).trim()
+
+  const customerPhone = String(
+    formData.get("customer_phone") ?? ""
+  ).trim()
+
+  const paymentMethod = String(
+    formData.get("payment_method") ?? ""
+  )
+
+  if (!listingId || !roomTypeId) {
+    return { error: "Please select a room category." }
+  }
+
+  if (!isValidDate(checkIn) || !isValidDate(checkOut)) {
+    return { error: "Please select valid booking dates." }
+  }
+
+  // Reject dates that JavaScript would otherwise normalize,
+  // such as February 30.
+  const validCalendarDate = (value: string) => {
+    const date = new Date(`${value}T00:00:00Z`)
+    return (
+      !Number.isNaN(date.getTime()) &&
+      date.toISOString().slice(0, 10) === value
+    )
+  }
+
+  if (
+    !validCalendarDate(checkIn) ||
+    !validCalendarDate(checkOut)
+  ) {
+    return { error: "Please select valid calendar dates." }
+  }
+
+  if (checkIn < todayInZambia()) {
+    return { error: "Check-in cannot be in the past." }
+  }
+
+  if (checkOut <= checkIn) {
+    return { error: "Checkout must be after check-in." }
+  }
+
+  const nights = Math.round(
+    (new Date(`${checkOut}T00:00:00Z`).getTime() -
+      new Date(`${checkIn}T00:00:00Z`).getTime()) /
+      86_400_000
+  )
+
+  // Matches our existing availability RPC limit.
+  if (nights < 1 || nights > 90) {
+    return { error: "Choose a stay between 1 and 90 nights." }
+  }
+
+  if (
+    rawRooms.trim() === "" ||
+    !Number.isSafeInteger(roomsBooked) ||
+    roomsBooked < 1 ||
+    roomsBooked > 10
+  ) {
+    return { error: "Choose between 1 and 10 rooms." }
+  }
+
+  if (
+    rawGuests.trim() === "" ||
+    !Number.isSafeInteger(guests) ||
+    guests < 1
+  ) {
+    return { error: "Enter a valid number of guests." }
+  }
+
+  if (!customerName || !customerPhone) {
+    return { error: "Please enter your contact details." }
+  }
+
+  if (
+    paymentMethod !== "mobile_money" &&
+    paymentMethod !== "card"
+  ) {
+    return { error: "Please choose a payment method." }
+  }
+
+  // Check that the property is published.
+  const { data: listing, error: listingError } =
+    await supabase
+      .from("listings")
+      .select("id, title")
+      .eq("id", listingId)
+      .eq("listing_type", "stay")
+      .eq("is_active", true)
+      .maybeSingle()
+
+  if (listingError || !listing) {
+    return { error: "This property is no longer available." }
+  }
+
+  // Get authoritative room details and price.
+  const { data: room, error: roomError } = await supabase
+    .from("stay_room_types")
+    .select(`
+      id,
+      name,
+      price_per_night,
+      max_guests_per_room
+    `)
+    .eq("id", roomTypeId)
+    .eq("listing_id", listingId)
+    .eq("is_active", true)
+    .maybeSingle()
+
+  if (roomError || !room) {
+    return { error: "This room category is unavailable." }
+  }
+
+  if (guests > roomsBooked * room.max_guests_per_room) {
+    return {
+      error: `The selected rooms accommodate up to ${
+        roomsBooked * room.max_guests_per_room
+      } guests.`,
+    }
+  }
+
+  // Check availability before accepting the request.
+  // This is provisional: host confirmation checks again.
+  const availability = await getStayRoomAvailability(
+    listingId,
+    checkIn,
+    checkOut
+  )
+
+  if (!availability.ok) {
+    return {
+      error: availability.error ?? "Unable to check availability.",
+    }
+  }
+
+  const selectedAvailability = availability.rooms.find(
+    (item) => item.id === roomTypeId
+  )
+
+  if (
+    !selectedAvailability ||
+    selectedAvailability.available < roomsBooked
+  ) {
+    return {
+      error: "Not enough rooms are available for these dates.",
+    }
+  }
+
+  // Save a PENDING request. The database supplies the
+  // pending status and existing unpaid defaults.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const reference = makeReference()
+
+    const { error } = await supabase
+      .from("bookings")
+      .insert({
+        listing_id: listingId,
+        user_id: user.id,
+        stay_room_type_id: roomTypeId,
+        rooms_booked: roomsBooked,
+        quantity: roomsBooked,
+        check_in: checkIn,
+        check_out: checkOut,
+        nights,
+        guests,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: user.email ?? null,
+        payment_method: paymentMethod,
+        booking_reference: reference,
+      })
+
+    if (!error) {
+      const total =
+        room.price_per_night * roomsBooked * nights
+
+      const whatsappUrl = await hostWhatsAppUrl(
+        supabase,
+        listingId,
+        {
+          reference,
+          listingTitle: listing.title,
+          customerName,
+          lines: [
+            `Room: ${room.name}`,
+            `Rooms requested: ${roomsBooked}`,
+            `Check-in: ${messageDate(checkIn)}`,
+            `Check-out: ${messageDate(checkOut)}`,
+            `Nights: ${nights}`,
+            `Guests: ${guests}`,
+          ],
+          total,
+        }
+      )
+
+      return { reference, whatsappUrl }
+    }
+
+    // Retry only a reference collision.
+    if (error.code !== "23505") {
+      console.error(
+        "createStayRoomBooking failed:",
+        error.message
+      )
+
+      return {
+        error: "We couldn't save your request. Please try again.",
+      }
+    }
+  }
+
+  return {
+    error: "Unable to generate a booking reference. Try again.",
+  }
+}
