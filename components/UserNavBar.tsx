@@ -1,6 +1,7 @@
 
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Bookmark } from "lucide-react"
@@ -54,7 +55,7 @@ export default function UserNavbar() {
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/8 bg-black/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#121012]/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl">
 
       <div className="mx-auto max-w-7xl px-4 md:px-6">
 
@@ -64,9 +65,23 @@ export default function UserNavbar() {
           {/* Logo */}
           <Link
             href="/user"
-            className="shrink-0 text-xl font-normal tracking-tight text-white [font-family:var(--odini-font-display,inherit)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
+            aria-label="Odini home"
+            className="group flex shrink-0 items-center gap-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d]"
           >
-            odini
+            <span className="relative h-9 w-9 overflow-hidden rounded-xl border border-white/15 bg-[#7A1F2B] shadow-md">
+              <Image
+                src="/odini.jpeg"
+                alt=""
+                fill
+                sizes="36px"
+                className="object-cover"
+                preload
+              />
+            </span>
+
+            <span className="text-xl font-black tracking-tight text-white transition group-hover:text-[#FF8CA5] [font-family:var(--odini-font-display,inherit)]">
+              odini
+            </span>
           </Link>
 
           {/* Desktop navigation */}
@@ -121,7 +136,7 @@ export default function UserNavbar() {
                     }
                     className={`flex h-9 w-9 items-center justify-center rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8365d] ${
                       active
-                        ? "bg-white/15 text-white"
+                        ? "bg-[#e8365d]/15 text-[#e8365d]"
                         : "text-white/50 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -143,7 +158,7 @@ export default function UserNavbar() {
 
       {/* Mobile navigation */}
       <nav
-        className="flex border-t border-white/8 md:hidden"
+        className="flex border-t border-white/10 md:hidden"
         aria-label="Mobile navigation"
       >
         {NAV_LINKS.map((link) => {
