@@ -1,8 +1,28 @@
+
 "use client"
 
 import { useState, useTransition } from "react"
-import { Check, CircleDollarSign, MessageCircle, X } from "lucide-react"
-import { updateHostBooking, type HostBookingAction } from "./action"
+import { useRouter } from "next/navigation"
+
+import {
+  BedDouble,
+  CalendarDays,
+  Check,
+  CircleDollarSign,
+  Clock3,
+  Compass,
+  MessageCircle,
+  Phone,
+  Ticket,
+  UserRound,
+  Wallet,
+  X,
+} from "lucide-react"
+
+import {
+  updateHostBooking,
+  type HostBookingAction,
+} from "./action"
 
 export type HostBooking = {
   id: string
@@ -27,14 +47,21 @@ export type HostBooking = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-[#D4A64A]/15 text-[#8A6A1F]",
-  confirmed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+  pending: "bg-amber-50 text-amber-800",
+  confirmed: "bg-emerald-50 text-emerald-700",
+  cancelled: "bg-red-50 text-red-700",
 }
 
-// "2026-10-16" -> "Fri 16 Oct"
+const CATEGORY_ICONS = {
+  stay: BedDouble,
+  event: Ticket,
+  activity: Compass,
+}
+
 function day(date: string) {
-  return new Date(`${date}T12:00:00+02:00`).toLocaleDateString("en-GB", {
+  return new Date(
+    `${date}T12:00:00+02:00`
+  ).toLocaleDateString("en-GB", {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -53,159 +80,347 @@ function dateTime(iso: string) {
   })
 }
 
-// wa.me needs digits with country code: "097 123 4567" -> "260971234567"
+// Keep existing Zambia WhatsApp number handling.
 function waNumber(phone: string | null) {
   if (!phone) return null
+
   let d = phone.replace(/\D/g, "")
+
   if (d.startsWith("00")) d = d.slice(2)
   if (d.startsWith("0")) d = "260" + d.slice(1)
   if (d.length === 9) d = "260" + d
-  return d.length >= 11 && d.length <= 15 ? d : null
+
+  return d.length >= 11 && d.length <= 15
+    ? d
+    : null
 }
 
-// What was booked, and the total, depending on the listing type
+// Preserve the current pricing and booking summary.
 function summary(b: HostBooking) {
   const price = b.listing?.price ?? null
   const type = b.listing?.listing_type
 
-  if (type === "stay" && b.check_in && b.check_out) {
+  if (
+    type === "stay" &&
+    b.check_in &&
+    b.check_out
+  ) {
     const nights = b.nights ?? 1
+
     return {
       lines: [
-        `${day(b.check_in)} → ${day(b.check_out)} (${nights} ${nights === 1 ? "night" : "nights"})`,
-        `${b.guests ?? 1} ${b.guests === 1 ? "guest" : "guests"}`,
+        `${day(b.check_in)} → ${day(b.check_out)} (${nights} ${
+          nights === 1 ? "night" : "nights"
+        })`,
+        `${b.guests ?? 1} ${
+          b.guests === 1 ? "guest" : "guests"
+        }`,
       ],
-      total: price !== null ? price * nights : null,
+      total: price !== null
+        ? price * nights
+        : null,
     }
   }
+
   if (type === "event") {
     return {
       lines: [
-        ...(b.booking_date ? [dateTime(b.booking_date)] : []),
-        `${b.quantity} ${b.quantity === 1 ? "ticket" : "tickets"}`,
+        ...(b.booking_date
+          ? [dateTime(b.booking_date)]
+          : []),
+        `${b.quantity} ${
+          b.quantity === 1 ? "ticket" : "tickets"
+        }`,
       ],
-      total: price !== null ? price * b.quantity : null,
+      total: price !== null
+        ? price * b.quantity
+        : null,
     }
   }
-  // activity
+
   const people = b.guests ?? b.quantity
+
   return {
     lines: [
-      ...(b.booking_date ? [day(b.booking_date.slice(0, 10))] : []),
-      `${people} ${people === 1 ? "person" : "people"}`,
+      ...(b.booking_date
+        ? [day(b.booking_date.slice(0, 10))]
+        : []),
+      `${people} ${
+        people === 1 ? "person" : "people"
+      }`,
     ],
-    total: price !== null ? price * people : null,
+    total: price !== null
+      ? price * people
+      : null,
   }
 }
 
-// One booking for the host: details, and the confirm / cancel / mark paid buttons.
-// Only shows the buttons that make sense for the booking's current state.
-export default function HostBookingCard({ booking }: { booking: HostBooking }) {
-  const [isPending, startTransition] = useTransition()
+type Props = {
+  booking: HostBooking
+}
+
+export default function HostBookingCard({
+  booking,
+}: Props) {
+  const router = useRouter()
+
+  const [isPending, startTransition] =
+    useTransition()
+
   const [error, setError] = useState("")
 
   const { lines, total } = summary(booking)
-  const isCancelled = booking.status === "cancelled"
-  const isPaid = booking.payment_status === "paid"
+
+  const isCancelled =
+    booking.status === "cancelled"
+
+  const isPaid =
+    booking.payment_status === "paid"
+
+  const listingType =
+    booking.listing?.listing_type ?? "listing"
+
+  const CategoryIcon =
+    CATEGORY_ICONS[
+      listingType as keyof typeof CATEGORY_ICONS
+    ] ?? Compass
+
+  const paymentMethod =
+    booking.payment_method === "card"
+      ? "Card"
+      : booking.payment_method === "mobile_money"
+        ? "Mobile money"
+        : "Not specified"
 
   function run(action: HostBookingAction) {
-    if (action === "cancel" && !window.confirm("Cancel this booking? The guest should be told on WhatsApp.")) {
+    if (
+      action === "cancel" &&
+      !window.confirm(
+        "Cancel this booking? Remember to inform the guest on WhatsApp."
+      )
+    ) {
       return
     }
+
     setError("")
+
     startTransition(async () => {
-      const result = await updateHostBooking(booking.id, action)
-      if (!result.ok) setError(result.error ?? "Something went wrong.")
+      try {
+        const result = await updateHostBooking(
+          booking.id,
+          action
+        )
+
+        if (!result.ok) {
+          setError(
+            result.error ?? "Something went wrong."
+          )
+          return
+        }
+
+        // Refresh booking data and dashboard counts.
+        router.refresh()
+      } catch {
+        setError(
+          "Unable to update this booking. Please try again."
+        )
+      }
     })
   }
 
-  // WhatsApp the guest, with the reference already written in
-  const number = waNumber(booking.customer_phone)
-  const waText = encodeURIComponent(
-    `Hello ${booking.customer_name ?? ""}, this is about your ODINI booking ${booking.booking_reference ?? ""} for ${booking.listing?.title ?? "your booking"}.`
+  const number = waNumber(
+    booking.customer_phone
   )
+
+  const waText = encodeURIComponent(
+    `Hello ${booking.customer_name ?? ""}, ` +
+      `this is about your ODINI booking ` +
+      `${booking.booking_reference ?? ""} ` +
+      `for ${booking.listing?.title ?? "your booking"}.`
+  )
+
+  const actionClass =
+    "inline-flex min-h-10 items-center justify-center gap-2 " +
+    "rounded-xl px-4 py-2.5 text-sm font-semibold " +
+    "transition disabled:cursor-not-allowed " +
+    "disabled:opacity-50"
 
   return (
     <article
-      className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition sm:p-6 ${
-        isPending ? "opacity-60" : ""
+      aria-busy={isPending}
+      className={`overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-shadow hover:shadow-md ${
+        isPending ? "opacity-70" : ""
       }`}
     >
-      {/* Top row: reference, status, payment */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-sm font-semibold text-gray-900">
-          {booking.booking_reference ?? "No reference"}
-        </span>
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-            STATUS_STYLES[booking.status] ?? "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {booking.status}
-        </span>
-        {!isCancelled && (
+      {/* BOOKING HEADER */}
+      <div className="flex flex-col gap-4 border-b border-gray-100 bg-[#FCFBFB] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-mono text-xs font-bold text-[#3D0F15] sm:text-sm">
+            {booking.booking_reference ??
+              "No reference"}
+          </span>
+
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-              isPaid ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold capitalize ${
+              STATUS_STYLES[booking.status] ??
+              "bg-gray-100 text-gray-600"
             }`}
           >
-            {isPaid ? "Paid" : "Not paid yet"}
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                booking.status === "confirmed"
+                  ? "bg-emerald-500"
+                  : booking.status === "cancelled"
+                    ? "bg-red-500"
+                    : "bg-amber-500"
+              }`}
+            />
+            {booking.status}
           </span>
-        )}
-        <span className="ml-auto text-xs text-gray-400">Requested {dateTime(booking.created_at)}</span>
-      </div>
 
-      {/* Listing + what was booked */}
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#7A1F2B]">
-            {booking.listing?.listing_type ?? "listing"}
-          </p>
-          <h3 className="mt-1 font-semibold text-gray-900">
-            {booking.listing?.title ?? "Listing no longer available"}
-          </h3>
-          <ul className="mt-2 space-y-1 text-sm text-gray-600">
-            {lines.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          {!isCancelled && (
+            <span
+              className={`rounded-full px-3 py-1.5 text-[11px] font-semibold ${
+                isPaid
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {isPaid ? "Paid" : "Not paid yet"}
+            </span>
+          )}
         </div>
 
-        <div className="rounded-xl bg-[#F7EDEF] p-4">
-          <p className="text-sm font-semibold text-gray-900">{booking.customer_name ?? "Guest"}</p>
-          <p className="mt-0.5 text-sm text-gray-600">{booking.customer_phone ?? "No phone given"}</p>
-          <p className="mt-3 text-xs text-gray-500">
-            Pays by {booking.payment_method === "card" ? "card" : "mobile money"}
-          </p>
-          <p className="text-lg font-bold text-[#7A1F2B]">
-            {total !== null ? `K${total.toLocaleString("en-ZM")}` : "Price on request"}
-          </p>
+        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <Clock3 size={14} />
+          Requested {dateTime(booking.created_at)}
         </div>
       </div>
 
-      {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {/* BOOKING DETAILS */}
+      <div className="grid gap-6 px-5 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+        {/* LEFT: LISTING & RESERVATION */}
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F7EDEF] text-[#7A1F2B]">
+              <CategoryIcon size={21} />
+            </div>
 
-      {/* Actions */}
-      <div className="mt-5 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A1F2B]">
+                {listingType}
+              </p>
+
+              <h3 className="mt-1 line-clamp-2 text-lg font-bold text-[#3D0F15]">
+                {booking.listing?.title ??
+                  "Listing no longer available"}
+              </h3>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              Reservation details
+            </p>
+
+            <div className="mt-3 space-y-2.5">
+              {lines.map((line, index) => (
+                <div
+                  key={`${index}-${line}`}
+                  className="flex items-start gap-3 text-sm text-gray-600"
+                >
+                  <CalendarDays
+                    size={16}
+                    className="mt-0.5 shrink-0 text-[#7A1F2B]"
+                  />
+
+                  <span className="leading-6">
+                    {line}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: GUEST & PAYMENT */}
+        <div className="rounded-2xl border border-[#7A1F2B]/10 bg-[#F8F7F7] p-5">
+          <div className="flex items-center gap-2">
+            <UserRound
+              size={17}
+              className="text-[#7A1F2B]"
+            />
+
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Guest Information
+            </p>
+          </div>
+
+          <p className="mt-4 font-bold text-[#3D0F15]">
+            {booking.customer_name ?? "Guest"}
+          </p>
+
+          <p className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+            <Phone
+              size={15}
+              className="shrink-0"
+            />
+            {booking.customer_phone ??
+              "No phone provided"}
+          </p>
+
+          <div className="mt-5 border-t border-gray-200 pt-4">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Wallet size={15} />
+              Payment method: {paymentMethod}
+            </div>
+
+            <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Estimated Total
+            </p>
+
+            <p className="mt-1 text-2xl font-bold tracking-tight text-[#7A1F2B]">
+              {total !== null
+                ? `K${total.toLocaleString("en-ZM")}`
+                : "Price on request"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div
+          role="alert"
+          className="mx-5 mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-6"
+        >
+          {error}
+        </div>
+      )}
+
+      {/* ACTIONS */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 bg-[#FCFBFB] px-5 py-4 sm:px-6">
         {booking.status === "pending" && (
           <button
+            type="button"
             onClick={() => run("confirm")}
             disabled={isPending}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#7A1F2B] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#5E1721] disabled:opacity-50"
+            className={`${actionClass} bg-[#7A1F2B] text-white hover:bg-[#5E1721]`}
           >
-            <Check size={16} />
-            Confirm
+            <Check size={17} />
+            Confirm Booking
           </button>
         )}
 
         {!isCancelled && !isPaid && (
           <button
+            type="button"
             onClick={() => run("mark_paid")}
             disabled={isPending}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#7A1F2B]/30 px-4 py-2 text-sm font-semibold text-[#7A1F2B] transition hover:bg-[#F7EDEF] disabled:opacity-50"
+            className={`${actionClass} border border-[#7A1F2B]/20 bg-white text-[#7A1F2B] hover:bg-[#F7EDEF]`}
           >
-            <CircleDollarSign size={16} />
-            Mark paid
+            <CircleDollarSign size={17} />
+            Mark Paid
           </button>
         )}
 
@@ -214,20 +429,21 @@ export default function HostBookingCard({ booking }: { booking: HostBooking }) {
             href={`https://wa.me/${number}?text=${waText}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#1FA855] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#198C46]"
+            className={`${actionClass} bg-[#1FA855] text-white hover:bg-[#198C46]`}
           >
-            <MessageCircle size={16} />
-            WhatsApp guest
+            <MessageCircle size={17} />
+            WhatsApp Guest
           </a>
         )}
 
         {!isCancelled && (
           <button
+            type="button"
             onClick={() => run("cancel")}
             disabled={isPending}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+            className={`${actionClass} text-red-600 hover:bg-red-50 sm:ml-auto`}
           >
-            <X size={16} />
+            <X size={17} />
             Cancel
           </button>
         )}
