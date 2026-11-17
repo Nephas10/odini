@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import BookingInsights from "./BookingInsights"
 
 // ---------------------------------------
@@ -37,9 +38,7 @@ export default async function HostAnalyticsPage({
 
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/analytics")

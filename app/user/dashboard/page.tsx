@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowRight, Bookmark, CalendarCheck, Compass, Store } from "lucide-react"
@@ -25,9 +26,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/user/dashboard")

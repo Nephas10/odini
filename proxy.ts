@@ -44,9 +44,10 @@ export async function proxy(request: NextRequest) {
 
   // Also refreshes the session if it's close to expiring. Keep this call
   // directly after createServerClient, with no other code in between.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // getClaims() checks the login token here instead of asking Supabase on
+  // every click (once JWT signing keys are on in the Supabase project).
+  const { data } = await supabase.auth.getClaims()
+  const user = data?.claims?.sub ? data.claims : null
 
   const { pathname, search } = request.nextUrl
 

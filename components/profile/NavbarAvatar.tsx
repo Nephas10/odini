@@ -28,10 +28,13 @@ export default function NavbarAvatar() {
       const supabase = createClient()
 
       // Identify the currently logged-in user.
+      // getSession() reads the login already stored in the browser, with no
+      // trip to Supabase. Fine here: the database rules still decide what loads.
       const {
-        data: { user },
+        data: { session },
         error: authError,
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getSession()
+      const user = session?.user
 
       if (cancelled) return
 
@@ -102,7 +105,7 @@ export default function NavbarAvatar() {
         handleAvatarUpdate
       )
     }
-  }, [pathname])
+  }, [])
 
   return (
     <Link

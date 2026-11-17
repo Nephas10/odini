@@ -4,15 +4,14 @@ import ListingsClient from "./ListingsClient"
 import { normalizeEventSchedule } from "@/lib/explore/eventDates"
 import { unstable_rethrow } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 
 export default async function UserPage() {
   const supabase = await createClient()
 
   // Retrieve the authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // Retrieve listings
   const result = await getListings().catch((error: unknown) => {
