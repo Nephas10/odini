@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import HostBookingCard, { type HostBooking } from "./HostBookingCard"
 
 // Supabase may return the joined listing as an array.
@@ -76,9 +77,7 @@ export default async function HostBookingsPage({
 
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/bookings")

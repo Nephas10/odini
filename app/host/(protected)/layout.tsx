@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import HostNavbar from "./HostNavbar"
 
 // Wraps every host page inside (protected): only hosts get through.
@@ -7,9 +8,7 @@ import HostNavbar from "./HostNavbar"
 export default async function HostLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect("/auth/login?next=/host")
 
   const { data: profile } = await supabase

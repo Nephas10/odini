@@ -14,15 +14,14 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import EditProfileForm from "@/components/profile/EditProfileForm"
 
 export default async function ProfilePage() {
   const supabase = await createClient()
 
   // Get authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // Redirect unauthenticated visitors to Login.
   // Preserve profile as the intended destination.

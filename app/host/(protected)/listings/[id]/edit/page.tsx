@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Eye } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import ListingForm from "../../_form/ListingForm"
 import { updateListing } from "../../_form/action"
 import type { ListingType } from "../../_form/fields"
@@ -22,9 +23,7 @@ export default async function EditListingPage({ params }: Props) {
   const { id } = await params
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const { data: listing } = await supabase
     .from("listings")

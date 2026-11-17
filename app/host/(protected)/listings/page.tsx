@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import ListingStatusToggle from "./ListingStatusToggle"
 import DeleteListingButton from "./DeleteListingButton"
 
@@ -81,9 +82,7 @@ export default async function HostListingsPage({
 
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/listings")

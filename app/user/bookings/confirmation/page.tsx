@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -25,9 +26,7 @@ export default async function BookingConfirmation({
   const supabase = await createClient()
 
   // Get logged-in user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login")

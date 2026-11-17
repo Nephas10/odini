@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 // ---------------------------------------
 // TYPES
@@ -137,9 +138,7 @@ export default async function BookingInsights({
 }: Props) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/analytics")
