@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import FYPFeed from "./FYPFeed"
 import { rankForYou, type FypListing, type UserSignals } from "./ranking"
 
@@ -13,9 +14,7 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 export default async function FYPPage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // 1. Active listings (with event date and spots, for the event rules)
   const { data: rows, error } = await supabase

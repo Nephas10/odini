@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { Bell, BellOff,CalendarCheck, CalendarX, Info, ArrowRight } from "lucide-react";
 import MarkAsReadButton from "@/components/notifications/MarkAsReadButton"
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 type Notification = {
     id: string
@@ -44,9 +45,7 @@ export default async function NotificationsPage() {
   const supabase = await createClient()
 
   // 1. Verify the logged-in user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/user/notifications")

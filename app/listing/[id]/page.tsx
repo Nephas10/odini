@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -39,9 +40,7 @@ export default async function PublicListingPage({
   // Check authentication.
   // Guests can still browse, but only the first
   // seven published listings are publicly viewable.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // Check which listings are visible to guests.
   if (!user) {

@@ -1,16 +1,13 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import ListingForm from "../_form/ListingForm"
 import { createListing } from "../_form/action"
 
 // Page only: header + the shared form, wired to "create".
 // The (protected) layout has already checked this is a logged-in host.
 export default async function NewListingPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   return (
     <main className="min-h-screen bg-gray-50">

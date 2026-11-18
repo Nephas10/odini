@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { Bookmark, MapPin, ArrowRight } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import SaveListingButton from "@/components/saved/SaveListingButton"
 
 const PRICE_UNIT: Record<string, string> = {
@@ -33,9 +34,7 @@ export default async function SavedListingsPage() {
   const supabase = await createClient()
 
   // 1. Get the authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/user/saved")

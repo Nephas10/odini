@@ -1,5 +1,6 @@
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import PublicExploreClient from "./PublicExploreClient"
 
 const GUEST_LISTING_LIMIT = 7
@@ -33,9 +34,7 @@ export default async function PublicExplorePage({
 
   // Authentication determines how many listings
   // the visitor can browse.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const isLoggedIn = !!user
 

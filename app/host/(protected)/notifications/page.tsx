@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import MarkAsReadButton from "@/components/notifications/MarkAsReadButton"
 
 type Notification = {
@@ -35,9 +36,7 @@ export default async function HostNotificationsPage() {
   const supabase = await createClient()
 
   // 1. Verify authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/notifications")
