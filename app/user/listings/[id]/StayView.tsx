@@ -42,13 +42,13 @@ export default function StayView({ listing }: Props) {
 
         {/* Title and location */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             {listing.title}
           </h1>
 
           {listing.location && (
-            <p className="mt-2 flex items-center gap-2 text-gray-500">
-              <MapPin size={18} className="text-[#7A1F2B]" />
+            <p className="mt-2 flex items-center gap-2 text-white/50">
+              <MapPin size={18} className="text-[#b81228]" />
               {listing.location}
             </p>
           )}
@@ -56,8 +56,8 @@ export default function StayView({ listing }: Props) {
 
         {/* Quick facts */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-xl bg-[#F7EDEF] px-4 py-3 text-sm font-medium text-[#7A1F2B]">
-            <Users size={18} />
+          <div className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-white/70">
+            <Users size={18} className="text-[#b81228]" />
 
             {maxGuests !== null
               ? `Up to ${maxGuests} ${
@@ -70,11 +70,11 @@ export default function StayView({ listing }: Props) {
         {/* Description */}
         {listing.description && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-white">
               About this stay
             </h2>
 
-            <p className="mt-2 whitespace-pre-line leading-7 text-gray-600">
+            <p className="mt-2 whitespace-pre-line leading-7 text-white/70">
               {listing.description}
             </p>
           </div>
@@ -83,18 +83,18 @@ export default function StayView({ listing }: Props) {
 
       {/* Right: price and booking */}
       <aside className="lg:sticky lg:top-6 lg:self-start">
-        <div className="rounded-2xl border border-[#7A1F2B]/15 bg-white p-6 shadow-sm">
-          <p className="text-2xl font-bold text-[#7A1F2B]">
+        <div>
+          <p className="text-2xl font-bold text-[#b81228]">
             {price}
 
             {listing.price !== null && (
-              <span className="ml-1 text-sm font-medium text-gray-500">
+              <span className="ml-1 text-sm font-medium text-white/50">
                 / night
               </span>
             )}
           </p>
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-white/50">
             Booking is confirmed by the host on WhatsApp.
           </p>
 

@@ -71,7 +71,7 @@ export default function ListingPhotoGallery({
     <div className="space-y-3">
       {/* Main photo */}
       <div
-        className="group relative h-72 overflow-hidden rounded-2xl bg-[#F7EDEF] sm:h-96"
+        className="group relative h-72 overflow-hidden rounded-2xl bg-white/5 sm:h-96"
         onTouchStart={(event) => {
           touchStartX.current = event.touches[0]?.clientX ?? null
         }}
@@ -93,7 +93,7 @@ export default function ListingPhotoGallery({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-[#7A1F2B]/60">
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-white/40">
             <Images size={38} />
             <p className="text-sm">Photo coming soon</p>
           </div>
@@ -147,7 +147,7 @@ export default function ListingPhotoGallery({
               aria-pressed={activeIndex === index}
               className={`h-20 w-24 flex-none overflow-hidden rounded-xl border-2 transition ${
                 activeIndex === index
-                  ? "border-[#7A1F2B] opacity-100"
+                  ? "border-[#b81228] opacity-100"
                   : "border-transparent opacity-65 hover:opacity-100"
               }`}
             >

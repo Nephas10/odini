@@ -81,10 +81,23 @@ export default function EventView({ listing }: Props) {
           badge="Event"
         />
 
-        {/* Date block + title */}
-        <div className="flex items-start gap-5">
+        {/* Title + location on the left, date block on the far right */}
+        <div className="flex items-start justify-between gap-5">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {listing.title}
+            </h1>
+
+            {listing.location && (
+              <p className="mt-2 flex items-center gap-2 text-white/50">
+                <MapPin size={18} className="text-[#b81228]" />
+                {listing.location}
+              </p>
+            )}
+          </div>
+
           {eventDate && (
-            <div className="flex w-16 shrink-0 flex-col items-center rounded-xl bg-[#7A1F2B] py-2 text-white">
+            <div className="flex w-16 shrink-0 flex-col items-center rounded-xl bg-[#b81228] py-2 text-white">
               <span className="text-xs font-medium uppercase">
                 {month}
               </span>
@@ -94,44 +107,28 @@ export default function EventView({ listing }: Props) {
               </span>
             </div>
           )}
-
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              {listing.title}
-            </h1>
-
-            {listing.location && (
-              <p className="mt-2 flex items-center gap-2 text-gray-500">
-                <MapPin
-                  size={18}
-                  className="text-[#7A1F2B]"
-                />
-                {listing.location}
-              </p>
-            )}
-          </div>
         </div>
 
         {/* Quick facts */}
         <div className="flex flex-wrap gap-3">
           {/* Event date */}
-          <div className="flex items-center gap-2 rounded-xl bg-[#F7EDEF] px-4 py-3 text-sm font-medium text-[#7A1F2B]">
-            <CalendarDays size={18} />
+              <div className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-white/70">
+            <CalendarDays size={18} className="text-[#b81228]" />
             {fullDate ?? "Date to be announced"}
           </div>
 
           {/* Event time */}
           {time && (
-            <div className="flex items-center gap-2 rounded-xl bg-[#F7EDEF] px-4 py-3 text-sm font-medium text-[#7A1F2B]">
-              <Clock size={18} />
+            <div className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-white/70">
+              <Clock size={18} className="text-[#b81228]" />
               {time}
             </div>
           )}
 
           {/* Event type */}
           {event?.event_type && (
-            <div className="flex items-center gap-2 rounded-xl bg-[#F7EDEF] px-4 py-3 text-sm font-medium capitalize text-[#7A1F2B]">
-              <Ticket size={18} />
+              <div className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-white/70">
+              <Ticket size={18} className="text-[#b81228]" />
               {event.event_type}
             </div>
           )}
@@ -139,8 +136,8 @@ export default function EventView({ listing }: Props) {
           {/* Capacity */}
           {event?.capacity !== null &&
             event?.capacity !== undefined && (
-              <div className="flex items-center gap-2 rounded-xl bg-[#F7EDEF] px-4 py-3 text-sm font-medium text-[#7A1F2B]">
-                <Users size={18} />
+              <div className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-sm font-medium text-white/70">
+                <Users size={18} className="text-[#b81228]" />
                 {event.capacity} capacity
               </div>
             )}
@@ -149,11 +146,11 @@ export default function EventView({ listing }: Props) {
         {/* Description */}
         {listing.description && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-white">
               About this event
             </h2>
 
-            <p className="mt-2 whitespace-pre-line leading-7 text-gray-600">
+            <p className="mt-2 whitespace-pre-line leading-7 text-white/70">
               {listing.description}
             </p>
           </div>
@@ -162,13 +159,13 @@ export default function EventView({ listing }: Props) {
 
       {/* Right: Price and booking */}
       <aside className="lg:sticky lg:top-6 lg:self-start">
-        <div className="rounded-2xl border border-[#7A1F2B]/15 bg-white p-6 shadow-sm">
+        <div>
           {/* Ticket price */}
-          <p className="text-2xl font-bold text-[#7A1F2B]">
+          <p className="text-2xl font-bold text-[#b81228]">
             {price}
 
             {listing.price !== null && (
-              <span className="ml-1 text-sm font-medium text-gray-500">
+              <span className="ml-1 text-sm font-medium text-white/50">
                 / ticket
               </span>
             )}
@@ -179,8 +176,8 @@ export default function EventView({ listing }: Props) {
             <p
               className={`mt-3 text-sm font-medium ${
                 isSoldOut
-                  ? "text-red-600"
-                  : "text-gray-700"
+                  ? "text-red-400"
+                  : "text-white/80"
               }`}
             >
               {isSoldOut
@@ -192,7 +189,7 @@ export default function EventView({ listing }: Props) {
           )}
 
           {/* Booking explanation */}
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-white/50">
             Booking is confirmed by the host on WhatsApp.
           </p>
 
