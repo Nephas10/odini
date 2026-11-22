@@ -32,10 +32,13 @@ export default function NotificationBell({
     async function loadUnreadCount() {
       const supabase = createClient()
 
+      // getSession() reads the login already stored in the browser, with no
+      // trip to Supabase. Fine here: the database rules still decide what loads.
       const {
-        data: { user },
+        data: { session },
         error: authError,
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getSession()
+      const user = session?.user
 
       if (cancelled) return
 
@@ -80,10 +83,22 @@ export default function NotificationBell({
       void loadUnreadCount()
     }
 
+    // Refresh when the user comes back to the tab
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") void loadUnreadCount()
+    }
+
     window.addEventListener(
       "odini:notifications-changed",
       handleNotificationChange
     )
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    // Check for new notifications once a minute, instead of on every page
+    // change (each check is a trip to the database, slow from Zambia)
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadUnreadCount()
+    }, 60_000)
 
     return () => {
       cancelled = true
@@ -92,8 +107,10 @@ export default function NotificationBell({
         "odini:notifications-changed",
         handleNotificationChange
       )
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.clearInterval(timer)
     }
-  }, [pathname, isHost])
+  }, [isHost])
 
   return (
     <Link

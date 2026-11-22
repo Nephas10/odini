@@ -39,6 +39,9 @@ export default function MarkAsReadButton({
         // Update the button immediately
         setIsRead(true)
 
+        // Tell the navbar bell to update its unread count
+        window.dispatchEvent(new Event("odini:notifications-changed"))
+
         // Refresh server-rendered notification data
         router.refresh()
       } catch {

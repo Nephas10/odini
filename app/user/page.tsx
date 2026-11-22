@@ -4,38 +4,40 @@ import ListingsClient from "./ListingsClient"
 import { normalizeEventSchedule } from "@/lib/explore/eventDates"
 import { unstable_rethrow } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 
 export default async function UserPage() {
   const supabase = await createClient()
 
   // Retrieve the authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
-  // Retrieve listings
-  const result = await getListings().catch((error: unknown) => {
-    unstable_rethrow(error)
+  // Listings and this user's saved ids load at the same time (one wait, not two)
+  const [result, saved] = await Promise.all([
+    // Retrieve listings
+    getListings().catch((error: unknown) => {
+      unstable_rethrow(error)
 
-    console.error("Explore discovery retrieval failed")
+      console.error("Explore discovery retrieval failed")
 
-    return {
-      success: false,
-      listings: [],
-      error: null,
-    }
-  })
+      return {
+        success: false,
+        listings: [],
+        error: null,
+      }
+    }),
 
-  // Retrieve saved listing IDs for the current user
+    // Retrieve saved listing IDs for the current user
+    user
+      ? supabase.from("saved_listings").select("listing_id").eq("user_id", user.id)
+      : Promise.resolve(null),
+  ])
+
   let savedIds: string[] = []
 
-  if (user) {
-    const { data: savedListings, error: savedError } =
-      await supabase
-        .from("saved_listings")
-        .select("listing_id")
-        .eq("user_id", user.id)
+  if (saved) {
+    const { data: savedListings, error: savedError } = saved
 
     if (savedError) {
       console.error(

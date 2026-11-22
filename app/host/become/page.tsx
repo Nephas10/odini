@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft, CalendarCheck, MessageCircle, Store } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import BecomeHostForm from "./BecomeHostForm"
 
 const BENEFITS = [
@@ -14,9 +15,7 @@ const BENEFITS = [
 export default async function BecomeHostPage() {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect("/auth/login?next=/host/become")
 
   const { data: profile } = await supabase

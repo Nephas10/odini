@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 import MarkAsReadButton from "@/components/notifications/MarkAsReadButton"
 
 type Notification = {
@@ -35,27 +36,23 @@ export default async function HostNotificationsPage() {
   const supabase = await createClient()
 
   // 1. Verify authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect("/auth/login?next=/host/notifications")
   }
 
-  // 2. Verify host role
-  const { data: profile } = await supabase
+  // 2 + 3. Host role and booking notifications load at the same time.
+  // Safe: the query only returns this user's own notifications, and nothing
+  // is shown unless the role check below passes.
+  const [{ data: profile }, { data, error }] = await Promise.all([
+    supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .maybeSingle()
+    .maybeSingle(),
 
-  if (profile?.role !== "host") {
-    redirect("/host/become")
-  }
-
-  // 3. Fetch host booking notifications
-  const { data, error } = await supabase
+    supabase
     .from("notifications")
     .select(`
       id,
@@ -69,7 +66,12 @@ export default async function HostNotificationsPage() {
     .eq("recipient_id", user.id)
     .eq("type", "booking_request")
     .order("created_at", { ascending: false })
-    .limit(50)
+    .limit(50),
+  ])
+
+  if (profile?.role !== "host") {
+    redirect("/host/become")
+  }
 
   const notifications: Notification[] = data ?? []
 

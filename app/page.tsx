@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 import LandingNavbar from "@/components/landing/LandingNavbar"
 import LandingHero from "@/components/landing/LandingHero"
@@ -19,9 +20,7 @@ export default async function Home() {
   const supabase = await createClient()
 
   // Personalize navigation without restricting public access
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const isLoggedIn = !!user
 

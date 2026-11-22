@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { CalendarDays, MapPin, Users,} from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 // Supabase types joined listings as an array.
 // Each booking belongs to one listing.
@@ -356,9 +357,7 @@ export default async function MyBookingsPage({
   const supabase = await createClient()
 
   // Get logged-in user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect(
