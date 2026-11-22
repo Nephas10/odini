@@ -17,7 +17,7 @@ export default function BookNowButton({
 }: Props) {
   if (disabled) {
     return (
-      <span className="mt-5 block w-full cursor-not-allowed rounded-xl bg-gray-200 px-5 py-3 text-center font-medium text-gray-500">
+      <span className="mt-5 block w-full cursor-not-allowed rounded-xl bg-white/10 px-5 py-3 text-center font-medium text-white/40">
         {disabledLabel}
       </span>
     )
@@ -26,7 +26,7 @@ export default function BookNowButton({
   return (
     <Link
       href={`/user/listings/${listingId}/book`}
-      className="mt-5 block w-full rounded-xl bg-[#7A1F2B] px-5 py-3 text-center font-medium text-white transition hover:bg-[#5E1721]"
+      className="mt-5 block w-full rounded-xl bg-[#b81228] px-5 py-3 text-center font-medium text-white transition hover:bg-[#960f21]"
     >
       {label}
     </Link>
