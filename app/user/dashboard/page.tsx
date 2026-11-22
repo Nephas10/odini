@@ -32,17 +32,17 @@ export default async function DashboardPage() {
     redirect("/auth/login?next=/user/dashboard")
   }
 
-  // Profile (role decides what the host card says)
-  const { data: profile } = await supabase
+  // Profile and bookings load at the same time (one wait, not two)
+  const [{ data: profile }, { data: bookings }] = await Promise.all([
+    // Profile (role decides what the host card says)
+    supabase
     .from("profiles")
     .select("firstname, lastname, username, role")
     .eq("id", user.id)
-    .single()
+    .single(),
 
-  const isHost = profile?.role === "host"
-
-  // Bookings
-  const { data: bookings } = await supabase
+    // Bookings
+    supabase
     .from("bookings")
     .select(`
       id,
@@ -59,7 +59,10 @@ export default async function DashboardPage() {
       )
     `)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false }),
+  ])
+
+  const isHost = profile?.role === "host"
 
   const totalBookings = bookings?.length ?? 0
   const confirmedBookings = bookings?.filter((b) => b.status === "confirmed").length ?? 0

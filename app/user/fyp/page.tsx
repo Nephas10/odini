@@ -16,8 +16,10 @@ export default async function FYPPage() {
 
   const user = await getCurrentUser()
 
-  // 1. Active listings (with event date and spots, for the event rules)
-  const { data: rows, error } = await supabase
+  // Listings and this user's history load at the same time (one wait, not two)
+  const [{ data: rows, error }, { data: profile }, { data: bookings }] = await Promise.all([
+    // 1. Active listings (with event date and spots, for the event rules)
+    supabase
     .from("listings")
     .select(`
       id,
@@ -31,7 +33,19 @@ export default async function FYPPage() {
       events ( event_time, available_slots )
     `)
     .eq("is_active", true)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false }),
+
+    // 2. What we know about this user (skipped when logged out)
+    user
+      ? supabase.from("profiles").select("location").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase
+          .from("bookings")
+          .select("listing_id, status, listings ( listing_type, location )")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: null }),
+  ])
 
   if (error) {
     console.error("FYP listings error:", error)
@@ -60,14 +74,6 @@ export default async function FYPPage() {
   }
 
   if (user) {
-    const [{ data: profile }, { data: bookings }] = await Promise.all([
-      supabase.from("profiles").select("location").eq("id", user.id).maybeSingle(),
-      supabase
-        .from("bookings")
-        .select("listing_id, status, listings ( listing_type, location )")
-        .eq("user_id", user.id),
-    ])
-
     signals.homeLocation = profile?.location ?? null
 
     for (const booking of bookings ?? []) {
