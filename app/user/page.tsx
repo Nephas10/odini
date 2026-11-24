@@ -54,21 +54,12 @@ export default async function UserPage() {
 
       {/* Intro */}
       <section className="bg-black">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mx-auto max-w-7xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
 
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#e8365d]">
+          <h1 className="text-sm font-semibold uppercase tracking-wider text-[#e8365d]">
             Explore Zambia
-          </p>
-
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Discover something new
           </h1>
 
-          <p className="mt-3 max-w-2xl text-white/70">
-            Find stays, events and activities around you,
-            and book in a few taps.
-          </p>
-          
         </div>
       </section>
 
